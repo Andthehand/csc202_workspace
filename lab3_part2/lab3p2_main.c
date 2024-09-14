@@ -281,6 +281,7 @@ int main(void)
 
   msp_printf(" *** PROGRAM TERMINATED ***\r\n",0);
   
+  for(;;);
 
 } /* main */
 
