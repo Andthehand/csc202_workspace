@@ -24,6 +24,18 @@
             "type": "ccs-debug",
             "request": "launch",
             "project": "lab4"
+        },
+        {
+            "name": "Tinkering",
+            "type": "ccs-debug",
+            "request": "launch",
+            "project": "Tinkering"
+        },
+        {
+            "name": "lab5",
+            "type": "ccs-debug",
+            "request": "launch",
+            "project": "lab5"
         }
     ]
 }
