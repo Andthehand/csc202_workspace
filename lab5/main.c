@@ -163,14 +163,7 @@ void run_lab5_part2()
         } /* if */
         break;
       case DISPLAY:
-        if(is_pb_down(PB1_IDX))
-        {
-          seg7_on(value, 2);
-        } /* if */
-        else 
-        {
-          seg7_on(value, 0);
-        } /* else */
+        seg7_on(value, is_pb_down(PB1_IDX) ? 2 : 0);
         
         if(advanceNextState)
         {
