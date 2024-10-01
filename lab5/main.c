@@ -10,7 +10,8 @@
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    This program serves as a ... 
+//    This program serves to show how a state machine works as well as how to
+//    interface with an external keypad, LED bar, and 7 segment display.
 //
 //*****************************************************************************
 //*****************************************************************************
