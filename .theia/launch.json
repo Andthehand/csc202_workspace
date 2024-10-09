@@ -44,10 +44,10 @@
             "project": "lab6"
         },
         {
-            "name": "Lab7",
+            "name": "lab7_p1_2",
             "type": "ccs-debug",
             "request": "launch",
-            "project": "Lab7"
+            "project": "lab7_p1_2"
         }
     ]
 }
