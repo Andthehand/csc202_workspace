@@ -5,7 +5,7 @@
 //
 //       LAB NAME:  Lab 7: Working with Interrupts
 //
-//      FILE NAME:  main.c
+//      FILE NAME:  lab7p3_main.c
 //
 //-----------------------------------------------------------------------------
 //
