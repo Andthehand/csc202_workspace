@@ -71,6 +71,20 @@ int main(void)
 
 } /* main */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  The interupt is called every 10.24 msec and displays how many dipsw are 
+//  switched on.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void SysTick_Handler(void)
 {
   uint8_t num_switches_down = 0;
@@ -82,6 +96,20 @@ void SysTick_Handler(void)
   seg7_hex(num_switches_down, SEG7_DIG0_ENABLE_IDX);
 } /* SysTick_Handler */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code continuously writes byte values to a specific position on an LCD 
+//  screen in an infinite loop.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab7_part3()
 {
   while(true)

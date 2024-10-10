@@ -43,7 +43,8 @@ void run_lab7_part4();
 //-----------------------------------------------------------------------------
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
-
+#define PART4_MESSAGE_PB2                                          "PB2 PRESSED"
+#define PART4_MESSAGE_END                                      "Program Stopped"
 
 //-----------------------------------------------------------------------------
 // Define global variables and structures here.
@@ -77,6 +78,19 @@ int main(void)
 
 } /* main */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code configures an interrupt for GPIO pin DIO18 on GPIOB
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void init_PB1_irq()
 {
   GPIOB->POLARITY31_16 = GPIO_POLARITY31_16_DIO18_RISE;
@@ -86,6 +100,20 @@ void init_PB1_irq()
   NVIC_SetPriority(GPIOB_INT_IRQn, 2);
   NVIC_EnableIRQ(GPIOB_INT_IRQn);
 } /* init_PB2_irq */
+
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code configures an interrupt for GPIO pin DIO15 on GPIOA
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void init_PB2_irq()
 {
   GPIOA->POLARITY15_0 = GPIO_POLARITY15_0_DIO15_RISE;
@@ -96,16 +124,56 @@ void init_PB2_irq()
   NVIC_EnableIRQ(GPIOA_INT_IRQn);
 } /* init_PB2_irq */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code disables all interrupts for GPIOB
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void disable_PB1_irq()
 {
   NVIC_DisableIRQ(GPIOB_INT_IRQn);
 } /* disable_PB2_irq */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code disables all interrupts for GPIOA
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void disable_PB2_irq()
 {
   NVIC_DisableIRQ(GPIOA_INT_IRQn);
 } /* disable_PB2_irq */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code snippet handles interrupts from two GPIO groups (GPIOA and GPIOB) 
+//  in a loop, checking for specific interrupt statuses.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void GROUP1_IRQHandler(void)
 {
   uint32_t group_iidx_status;
@@ -138,6 +206,21 @@ void GROUP1_IRQHandler(void)
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code manages the behavior of an LED and an LCD display based on button 
+//  presses. It loops from 0-100 until PB1 is pressed and toggles displaying a
+//  string with PB2 is pressed.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab7_part4()
 {
   led_enable();
@@ -154,7 +237,7 @@ void run_lab7_part4()
       if(show_string) 
       {
         lcd_set_ddram_addr(LCD_LINE2_ADDR);
-        lcd_write_string("PB2 PRESSED");
+        lcd_write_string(PART4_MESSAGE_PB2);
       } /* if */
       else 
       {
@@ -175,7 +258,8 @@ void run_lab7_part4()
   disable_PB1_irq();
   disable_PB2_irq();
   seg7_off();
+  leds_off();
 
   lcd_clear();
-  lcd_write_string("Program Stopped");
+  lcd_write_string(PART4_MESSAGE_END);
 }

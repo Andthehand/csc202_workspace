@@ -49,6 +49,8 @@ void run_lab7_part2();
 #define LCD_LAST_ADDR                                                     (0x4F)
 #define LCD_BLANK_CHAR                                                       ' '
 
+#define STRING_ESC                                                          '\0'
+
 #define PART1_MESSAGE                                "Microcontrollers are fun."
 #define PART1_MESSAGE_END                                          "Part 1 Done"
 #define PART1_DELAY                                                          100
@@ -106,6 +108,20 @@ int main(void)
 
 } /* main */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  When a gpio interupt is called handle it here by checking the iidx group and
+//  GPIO mis.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void GROUP1_IRQHandler(void)
 {
   uint32_t group_iidx_status;
@@ -129,6 +145,20 @@ void GROUP1_IRQHandler(void)
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  The interupt is called every 10.25 msec and displays a sos to the DIG0 seg7
+//  display.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void SysTick_Handler(void)
 {
   static uint16_t delay_time = 1;
@@ -149,6 +179,23 @@ void SysTick_Handler(void)
   } /* if */
 } /* SysTick_Handler */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This function configures a GPIO interrupt on pin DIO15. It sets the 
+//  interrupt polarity to trigger on the rising edge of the signal, clears any 
+//  existing interrupt flags, and enables the interrupt in the CPU mask. 
+//  Additionally, it assigns a priority of 2 to the interrupt and enables it in 
+//  the Nested Vectored Interrupt Controller (NVIC).
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void init_PB2_irq()
 {
   GPIOA->POLARITY15_0 = GPIO_POLARITY15_0_DIO15_RISE;
@@ -159,11 +206,40 @@ void init_PB2_irq()
   NVIC_EnableIRQ(GPIOA_INT_IRQn);
 } /* init_PB2_irq */
 
+
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This function disables the interrupt for GPIOA_INT_IRQn in the Nested 
+//  Vectored Interrupt Controller (NVIC).
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void disable_PB2_irq()
 {
   NVIC_DisableIRQ(GPIOA_INT_IRQn);
 } /* disable_PB2_irq */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code displays a scrolling message on an LCD, updating line by line 
+//  until the g_PB2_Pressed flag is set.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab7_part1()
 {
   const char* message = PART1_MESSAGE;
@@ -183,11 +259,11 @@ void run_lab7_part1()
 
 
 
-    for (uint8_t offset = 1; message[offset] != '\0' &&
+    for (uint8_t offset = 1; message[offset] != STRING_ESC &&
                               !g_PB2_Pressed; offset++) 
     {
       lcd_set_ddram_addr(LCD_LINE2_ADDR);
-      for(char i = 0; message[offset + i] != '\0' &&
+      for(char i = 0; message[offset + i] != STRING_ESC &&
                         i < CHARACTERS_PER_LCD_LINE &&
                         !g_PB2_Pressed; i++)
       {
@@ -207,6 +283,21 @@ void run_lab7_part1()
   g_PB2_Pressed = false;
 } /* run_lab7_part1 */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code controls an LCD to display a scrolling message, starting with 
+//  PART2_MESSAGE_START and waiting for a button press (g_PB2_Pressed) to 
+//  proceed
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab7_part2()
 {
   lcd_set_ddram_addr(LCD_LINE2_ADDR);
@@ -238,11 +329,11 @@ void run_lab7_part2()
 
 
 
-    for (uint8_t offset = 1; message[offset] != '\0'
+    for (uint8_t offset = 1; message[offset] != STRING_ESC
                               && !g_PB2_Pressed; offset++) 
     {
       lcd_set_ddram_addr(LCD_LINE2_ADDR);
-      for(char i = 0; message[offset + i] != '\0' &&
+      for(char i = 0; message[offset + i] != STRING_ESC &&
                         i < CHARACTERS_PER_LCD_LINE &&
                         !g_PB2_Pressed; i++)
       {
