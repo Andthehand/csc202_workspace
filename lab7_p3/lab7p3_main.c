@@ -41,6 +41,9 @@ void run_lab7_part3();
 #define SYS_TICK_PERIOD                                               (10.24E-3)
 #define SYS_TICK_PERIOD_COUNT     ((SYS_TICK_PERIOD * MSP0_CLOCK_FREQUENCY) - 1)
 
+#define PART3_DELAY                                                          200
+#define PART3_ITER_COUNT                                                     100
+
 //-----------------------------------------------------------------------------
 // Define global variables and structures here.
 // NOTE: when possible avoid using global variables
@@ -114,13 +117,13 @@ void run_lab7_part3()
 {
   while(true)
   {
-    for(uint8_t i = 0; i < 100; i++)
+    for(uint8_t i = 0; i < PART3_ITER_COUNT; i++)
     {
       lcd_set_ddram_addr(LCD_LINE1_ADDR + LCD_CHAR_POSITION_7);
 
       lcd_write_byte(i);
 
-      msec_delay(200);
+      msec_delay(PART3_DELAY);
     } /* for */
   } /* while */
 } /* run_lab7_part3 */
