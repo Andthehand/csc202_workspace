@@ -3,14 +3,14 @@
 //*****************************************************************************
 //  DESIGNER NAME:  Andrew DeFord
 //
-//       LAB NAME:  TBD
+//       LAB NAME:  Lab 8
 //
-//      FILE NAME:  main.c
+//      FILE NAME:  lab8p3_main.c
 //
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    This program serves as a ... 
+//    This program serves as a test for the ADC
 //
 //*****************************************************************************
 //*****************************************************************************
@@ -28,7 +28,6 @@
 #include "LaunchPad.h"
 #include "lcd1602.h"
 #include "adc.h"
-
 
 //-----------------------------------------------------------------------------
 // Define function prototypes used by the program
@@ -220,6 +219,23 @@ void GROUP1_IRQHandler(void)
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code reads an ADC value from a photodiode, displays it on an LCD, and 
+//  lights up LEDs based on the value's section. If a second button is pressed, 
+//  it reads a temperature sensor, converts the temperature to Fahrenheit, and 
+//  updates the LCD display with the temperature. This loop continues until a 
+//  button is pressed, after which the display is cleared and LEDs are disabled.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab8_part3() {
   float fahrenheit_temp = 0;
 
@@ -234,7 +250,7 @@ void run_lab8_part3() {
     int section = value / PART3_SECTION_DIVIDE;
     for(uint8_t i = 0; i < section; i++) {
       led_on(i);
-    }
+    } /* for */
 
     if(g_PB2_Pressed) {
       uint16_t temp_value = ADC0_in(PART3_CHANNEL_TEMP);
@@ -242,14 +258,14 @@ void run_lab8_part3() {
       fahrenheit_temp = celsius_temp * PART3_FAHRENHEIT_CONVERSTION;
 
       g_PB2_Pressed = false;
-    }
+    } /* if */
 
     lcd_set_ddram_addr(LCD_LINE2_ADDR);
     lcd_write_string(PART3_STRING_TEMP);
     lcd_write_byte(fahrenheit_temp);
     lcd_write_char(PART3_CHAR_DEGREE);
     lcd_write_char(PART3_CHAR_FAHRENHEIT);
-  }
+  } /* while */
 
   lcd_clear();
   lcd_write_string();

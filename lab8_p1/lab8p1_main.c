@@ -3,14 +3,14 @@
 //*****************************************************************************
 //  DESIGNER NAME:  Andrew DeFord
 //
-//       LAB NAME:  TBD
+//       LAB NAME:  Lab 8
 //
-//      FILE NAME:  main.c
+//      FILE NAME:  lab8p1_main.c
 //
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    This program serves as a ... 
+//    This program serves as a test for the ADC and internal op-amp
 //
 //*****************************************************************************
 //*****************************************************************************
@@ -41,8 +41,16 @@ void run_lab8_part1();
 //-----------------------------------------------------------------------------
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
-#define LIGHT_SENSOR_ADC_CHANNEL                                              7
-#define LIGHT_SENSOR_DARK_VALUE                                              35
+#define PART1_LIGHT_SENSOR_ADC_CHANNEL                                       7
+#define PART1_LIGHT_SENSOR_DARK_VALUE                                        35
+
+#define PART1_STRING_END                                      "Program Stopped"
+#define PART1_STRING_STATUS                                          "Status: "
+#define PART1_STRING_DARK                                               "Dark "
+#define PART1_STRING_LIGHT                                              "Light"
+#define PART1_STRING_ADC                                               "ADC = "
+
+#define OPA_POWER_UP_DELAY                                                   24
 
 //-----------------------------------------------------------------------------
 // Define global variables and structures here.
@@ -75,6 +83,20 @@ int main(void)
 
 } /* main */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  The function initializes and sets up an Operational Amplifier (OPA) for 
+//  general purpose mode and enables it.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void OPA0_init(void) {
   OPA0->GPRCM.RSTCTL = (OA_RSTCTL_KEY_UNLOCK_W | OA_RSTCTL_RESETSTKYCLR_CLR |
                         OA_RSTCTL_RESETASSERT_ASSERT);
@@ -82,7 +104,7 @@ void OPA0_init(void) {
   OPA0->GPRCM.PWREN = (OA_PWREN_KEY_UNLOCK_W | OA_PWREN_ENABLE_ENABLE);
 
   // time for OPA to power up
-  clock_delay(24);
+  clock_delay(OPA_POWER_UP_DELAY);
 
   OPA0->CFGBASE &= ~(OA_CFGBASE_RRI_MASK);
 
@@ -92,7 +114,7 @@ void OPA0_init(void) {
                OA_CFG_PSEL_EXTPIN0 | OA_CFG_OUTPIN_ENABLED | OA_CFG_CHOP_OFF);
                
   OPA0->CTL |= OA_CTL_ENABLE_ON;
-}
+} /* OPA0_init */
 
 
 //-----------------------------------------------------------------------------
@@ -173,33 +195,43 @@ void GROUP1_IRQHandler(void)
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
+
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code continuously reads the light sensor's value and displays the 
+//  sensor status ("Dark" or "Light") along with the ADC reading on an LCD 
+//  screen until a button is pressed. Once the button is pressed, it clears 
+//  the display and shows "Program Stopped."
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab8_part1() {
-  const char* status_string = "Status: ";
-  const char* dark_string   = "Dark ";
-  const char* light_string  = "Light";
-
-  const char* ADC_string    = "ADC = ";
-
   while (!g_PB1_Pressed) {
-    uint16_t light_value = ADC0_in(LIGHT_SENSOR_ADC_CHANNEL);
+    uint16_t light_value = ADC0_in(PART1_LIGHT_SENSOR_ADC_CHANNEL);
 
     lcd_set_ddram_addr(LCD_LINE1_ADDR);
-    lcd_write_string(status_string);
-    if(light_value < LIGHT_SENSOR_DARK_VALUE) 
+    lcd_write_string(PART1_STRING_STATUS);
+    if(light_value < PART1_LIGHT_SENSOR_DARK_VALUE) 
     {
-      lcd_write_string(dark_string);
-    } 
+      lcd_write_string(PART1_STRING_DARK);
+    } /* if */
     else 
     {
-      lcd_write_string(light_string);
-    }    
+      lcd_write_string(PART1_STRING_LIGHT);
+    } /* else */
 
     lcd_set_ddram_addr(LCD_LINE2_ADDR);
-    lcd_write_string(ADC_string);
+    lcd_write_string(PART1_STRING_ADC);
     lcd_write_doublebyte(light_value);
-  }
+  } /* while */
 
   lcd_clear();
-  lcd_write_string("Program Stopped");
-
-}
+  lcd_write_string(PART1_STRING_END);
+} /* run_lab8_part1 */

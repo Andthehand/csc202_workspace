@@ -3,14 +3,14 @@
 //*****************************************************************************
 //  DESIGNER NAME:  Andrew DeFord
 //
-//       LAB NAME:  TBD
+//       LAB NAME:  Lab 8
 //
-//      FILE NAME:  main.c
+//      FILE NAME:  lab8p2_main.c
 //
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    This program serves as a ... 
+//    This program serves as a test for the ADC
 //
 //*****************************************************************************
 //*****************************************************************************
@@ -29,7 +29,6 @@
 #include "lcd1602.h"
 #include "adc.h"
 
-
 //-----------------------------------------------------------------------------
 // Define function prototypes used by the program
 //-----------------------------------------------------------------------------
@@ -37,7 +36,6 @@ void init_PB1_irq();
 void disable_PB1_irq();
 
 void run_lab8_part2();
-
 
 //-----------------------------------------------------------------------------
 // Define symbolic constants used by the program
@@ -157,6 +155,22 @@ void disable_PB1_irq()
   NVIC_DisableIRQ(GPIOB_INT_IRQn);
 } /* disable_PB2_irq */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This code reads a value from an ADC channel and displays it on an LCD, then 
+//  turns on a corresponding number of LEDs based on the value's section. It 
+//  continues this process until a button is pressed, after which it clears the 
+//  display, shows an end message, and disables the LEDs.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab8_part2() {
   while (!g_PB1_Pressed) {
     uint16_t value = ADC0_in(PART2_CHANNEL);
@@ -169,10 +183,10 @@ void run_lab8_part2() {
     int section = value / PART2_SECTION_DIVIDE;
     for(uint8_t i = 0; i < section; i++) {
       led_on(i);
-    }
-  }
+    } /* for */
+  } /* while */
 
   lcd_clear();
-  lcd_write_string("Program Stopped");
+  lcd_write_string(PART2_STRING_END);
   led_disable();
-}
+} /* run_lab8_part2 */
