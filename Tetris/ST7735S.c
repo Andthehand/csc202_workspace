@@ -113,7 +113,7 @@ void ST7735S_init(void)
 
   // Configure SPI control register 0
   SPI1->CTL0 = (SPI_CTL0_CSCLR_DISABLE | SPI_CTL0_CSSEL_CSSEL_0 | 
-                SPI_CTL0_SPH_FIRST | SPI_CTL0_SPO_LOW | 
+                SPI_CTL0_SPH_SECOND | SPI_CTL0_SPO_HIGH | 
                 SPI_CTL0_PACKEN_DISABLED | SPI_CTL0_FRF_MOTOROLA_4WIRE | 
                 SPI_CTL0_DSS_DSS_8);
 
@@ -140,7 +140,7 @@ void ST7735S_init(void)
 
 void ST7735S_write_command(uint8_t data)
 {
-  while((SPI1->STAT & SPI_STAT_TNF_MASK) == SPI_STAT_TNF_FULL); 
+  while((SPI1->STAT & SPI_STAT_BUSY_MASK) == SPI_STAT_BUSY_MASK); 
   
   GPIOA->DOUT31_0 &= (~ST7735S_REG_SEL_MASK);
   SPI1->TXDATA = data;
@@ -149,7 +149,7 @@ void ST7735S_write_command(uint8_t data)
 void ST7735S_write_data(uint8_t data)
 {
   // Wait here until TX FIFO is not full
-  while((SPI1->STAT & SPI_STAT_TNF_MASK) == SPI_STAT_TNF_FULL); 
+  while((SPI1->STAT & SPI_STAT_BUSY_MASK) == SPI_STAT_BUSY_MASK); 
   
   GPIOA->DOUT31_0 |= ST7735S_REG_SEL_MASK;
   SPI1->TXDATA = data;
@@ -157,7 +157,7 @@ void ST7735S_write_data(uint8_t data)
 
 void ST7735S_write_color(uint16_t color)
 {
-  ST7735S_write_data(color << 8);
+  ST7735S_write_data(color >> 8);
   ST7735S_write_data(color);
 }
 
@@ -169,14 +169,8 @@ void ST7735S_set_addr(uint8_t x, uint8_t y)
   ST7735S_write_data(0x02 + x); //Start LSB = XS[ 7:0]
   ST7735S_write_data(0x00);     //End MSB   = XE[15:8]
   ST7735S_write_data(0x81);     //End LSB   = XE[ 7:0]
-  //Write the "row address set" command to the LCD
-  //RASET (2Bh): Row Address Set
-  // * The value of YS [15:0] and YE [15:0] are referred when RAMWR
-  //   command comes.
-  // * Each value represents one row line in the Frame Memory.
-  // * YS [15:0] always must be equal to or less than YE [15:0]
+
   ST7735S_write_command(LCD_RASET_CMD); //Row address set
-  //Write the parameters for the "row address set" command
   ST7735S_write_data(0x00);     //Start MSB = YS[15:8]
   ST7735S_write_data(0x01 + y); //Start LSB = YS[ 7:0]
   ST7735S_write_data(0x00);     //End MSB   = YE[15:8]

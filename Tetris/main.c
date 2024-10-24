@@ -56,10 +56,7 @@ int main(void)
   while (true) {
     ST7735S_set_addr(0, 0);
     ST7735S_write_command(LCD_RAMWR_CMD);
-    for (uint16_t i = 0; i < (128 * 128); i++)
-    {
-      ST7735S_write_color(0xFFFF);
-    }
+    ST7735S_write_color(0xFF00);
   }
 
   // Endless loop to prevent program from ending
