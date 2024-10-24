@@ -209,7 +209,7 @@ void spi1_disable(void)
 void spi1_write_data(uint8_t data)
 {
   // Wait here until TX FIFO is not full
-  while((SPI1->STAT & SPI_STAT_TNF_MASK) == SPI_STAT_TNF_FULL); 
+  while((SPI1->STAT & SPI_STAT_TFE_MASK) == SPI_STAT_TFE_MASK); 
   SPI1->TXDATA = data;
 } /* spi1_write_data */
 

@@ -37,6 +37,10 @@
 #define LP_SPI_CS0_MASK                                                 (1 << 6)
 #define LP_SPI_CS0_IOMUX                                         (IOMUX_PINCM23)
 #define LP_SPI_CS0_PFMODE                                                    (3)
+#define LP_SPI_CS3_PORT                                             (GPIO_PORTA)
+#define LP_SPI_CS3_MASK                                                (1 << 25)
+#define LP_SPI_CS3_IOMUX                                         (IOMUX_PINCM55)
+#define LP_SPI_CS3_PFMODE                                                    (3)
 
 #define ST7735S_REG_SEL_PORT                                        (GPIO_PORTA)
 #define ST7735S_REG_SEL_MASK                                           (1 << 13)
@@ -45,6 +49,8 @@
 #define ST7735S_RESET_PORT                                          (GPIO_PORTB)
 #define ST7735S_RESET_MASK                                             (1 << 15)
 #define ST7735S_RESET_IOMUX                                      (IOMUX_PINCM32)
+
+#define SPI_CTL1_CDMODE_1BYTE                         (1 << SPI_CTL1_CDMODE_OFS) 
 
 #define PINCM_GPIO_PIN_FUNC                              ((uint32_t)0x00000001U)
 

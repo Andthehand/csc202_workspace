@@ -38,13 +38,14 @@ void send_init_commands(void)
   GPIOB->DOUT31_0 |= ST7735S_RESET_MASK;
   msec_delay(150);
 
+  ST7735S_write_command(LCD_SWRESET_CMD);
+  msec_delay(200);
+
   ST7735S_write_command(LCD_SLPOUT_CMD);
   msec_delay(200);
 
-  ST7735S_write_command(LCD_NORON_CMD);
-
   ST7735S_write_command(LCD_COLMOD_CMD);
-  ST7735S_write_data(LCD_IFPF_12bit);
+  ST7735S_write_data(LCD_IFPF_16bit);
   msec_delay(10);
 
   // ST7735S_set_addr(0, 0);
@@ -53,6 +54,9 @@ void send_init_commands(void)
   // {
   //   ST7735S_write_color(0xFFFF);
   // }
+
+  ST7735S_write_command(LCD_IDMOFF_CMD);
+  ST7735S_write_command(LCD_NORON_CMD);
 
   ST7735S_write_command(LCD_DISPON_CMD);
   msec_delay(500);
@@ -83,12 +87,15 @@ void ST7735S_init(void)
   IOMUX->SECCFG.PINCM[LP_SPI_CS0_IOMUX] = (IOMUX_PINCM_PC_CONNECTED |
                       LP_SPI_CS0_PFMODE);
 
+  // IOMUX->SECCFG.PINCM[LP_SPI_CS3_IOMUX] = (IOMUX_PINCM_PC_CONNECTED | 
+  //                     LP_SPI_CS3_PFMODE);
+
   // Select BusClk (SysClk) source for SPI module
   SPI1->CLKSEL = (SPI_CLKSEL_SYSCLK_SEL_ENABLE | SPI_CLKSEL_MFCLK_SEL_DISABLE |
                   SPI_CLKSEL_LFCLK_SEL_DISABLE);
 
   // Set clock division
-  SPI1->CLKDIV = SPI_CLKDIV_RATIO_DIV_BY_8;
+  SPI1->CLKDIV = SPI_CLKDIV_RATIO_DIV_BY_1;
 
   #define PD0_CPUCLK_CLKDIV   2     // PD0 BUSCLK is half of CPUCLK
   #define PD1_CPUCLK_CLKDIV   1     // PD1 BUSCLK is same as CPUCLK
@@ -113,7 +120,7 @@ void ST7735S_init(void)
 
   // Configure SPI control register 0
   SPI1->CTL0 = (SPI_CTL0_CSCLR_DISABLE | SPI_CTL0_CSSEL_CSSEL_0 | 
-                SPI_CTL0_SPH_SECOND | SPI_CTL0_SPO_HIGH | 
+                SPI_CTL0_SPH_FIRST | SPI_CTL0_SPO_LOW | 
                 SPI_CTL0_PACKEN_DISABLED | SPI_CTL0_FRF_MOTOROLA_4WIRE | 
                 SPI_CTL0_DSS_DSS_8);
 
@@ -125,33 +132,39 @@ void ST7735S_init(void)
                 SPI_CTL1_POD_DISABLE | SPI_CTL1_CP_ENABLE | 
                 SPI_CTL1_LBM_DISABLE | SPI_CTL1_ENABLE_ENABLE);
 
-  //Setup Register Select
-  IOMUX->SECCFG.PINCM[ST7735S_REG_SEL_IOMUX] = (IOMUX_PINCM_PC_CONNECTED | 
-                      PINCM_GPIO_PIN_FUNC);
-  GPIOA->DOE31_0 |= ST7735S_REG_SEL_MASK;
-
-  //Setup Reset Pin
+  //Setup Reset Pin as input
   IOMUX->SECCFG.PINCM[ST7735S_RESET_IOMUX] = (IOMUX_PINCM_PC_CONNECTED | 
                       PINCM_GPIO_PIN_FUNC);
-  GPIOB->DOE31_0 |= ST7735S_RESET_MASK;
+  GPIOA->DOE31_0 |= ST7735S_RESET_MASK;
+
+  //Setup Register Select
+  IOMUX->SECCFG.PINCM[ST7735S_REG_SEL_IOMUX] = (IOMUX_PINCM_PC_CONNECTED | 
+                      PINCM_GPIO_PIN_FUNC | IOMUX_PINCM_INENA_ENABLE);
+  GPIOA->DOE31_0 |= ST7735S_REG_SEL_MASK;
 
   send_init_commands();
 }
 
 void ST7735S_write_command(uint8_t data)
 {
-  while((SPI1->STAT & SPI_STAT_BUSY_MASK) == SPI_STAT_BUSY_MASK); 
+  while((SPI1->STAT & SPI_STAT_BUSY_MASK) == SPI_STAT_BUSY_ACTIVE); 
   
-  GPIOA->DOUT31_0 &= (~ST7735S_REG_SEL_MASK);
+  // SPI1->CTL1 |= SPI_CTL1_CDMODE_1BYTE;
+  
+  GPIOA->DOUT31_0 &= ~ST7735S_REG_SEL_MASK;
+
   SPI1->TXDATA = data;
+
+  while((SPI1->STAT & SPI_STAT_BUSY_MASK) == SPI_STAT_BUSY_ACTIVE); 
+
+  GPIOA->DOUT31_0 |= ST7735S_REG_SEL_MASK;
 }
 
 void ST7735S_write_data(uint8_t data)
 {
   // Wait here until TX FIFO is not full
-  while((SPI1->STAT & SPI_STAT_BUSY_MASK) == SPI_STAT_BUSY_MASK); 
+  while((SPI1->STAT & SPI_STAT_TNF_MASK) == SPI_STAT_TNF_FULL); 
   
-  GPIOA->DOUT31_0 |= ST7735S_REG_SEL_MASK;
   SPI1->TXDATA = data;
 }
 

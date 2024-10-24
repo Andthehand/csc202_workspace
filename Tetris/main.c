@@ -49,6 +49,7 @@
 int main(void)
 {
   clock_init_40mhz();
+  clock_init_80mhz(0)
   launchpad_gpio_init();
 
   ST7735S_init();
@@ -56,7 +57,10 @@ int main(void)
   while (true) {
     ST7735S_set_addr(0, 0);
     ST7735S_write_command(LCD_RAMWR_CMD);
-    ST7735S_write_color(0xFF00);
+    for (uint16_t i = 0; i < (128 * 128); i++)
+    {
+      ST7735S_write_color(0x00FF);
+    }
   }
 
   // Endless loop to prevent program from ending
