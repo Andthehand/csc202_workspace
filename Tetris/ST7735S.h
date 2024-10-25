@@ -37,10 +37,6 @@
 #define LP_SPI_CS0_MASK                                                 (1 << 6)
 #define LP_SPI_CS0_IOMUX                                         (IOMUX_PINCM23)
 #define LP_SPI_CS0_PFMODE                                                    (3)
-#define LP_SPI_CS3_PORT                                             (GPIO_PORTA)
-#define LP_SPI_CS3_MASK                                                (1 << 25)
-#define LP_SPI_CS3_IOMUX                                         (IOMUX_PINCM55)
-#define LP_SPI_CS3_PFMODE                                                    (3)
 
 #define ST7735S_REG_SEL_PORT                                        (GPIO_PORTA)
 #define ST7735S_REG_SEL_MASK                                           (1 << 13)
@@ -105,14 +101,28 @@
 #define LCD_WIDTH                                                            128
 #define LCD_HEIGHT                                                           128
 
+typedef struct{
+  union {
+    struct {
+      uint16_t r:5;
+      uint16_t g:6;
+      uint16_t b:5;
+    };
+
+    uint8_t packet[2];
+  };
+} color565_t;
+
 // ----------------------------------------------------------------------------
 // Prototype for support functions
 // ----------------------------------------------------------------------------
 void ST7735S_init(void);
 void ST7735S_write_command(uint8_t data);
 void ST7735S_write_data(uint8_t data);
-void ST7735S_write_color(uint16_t color);
+void ST7735S_write_color(color565_t color);
 
 void ST7735S_set_addr(uint8_t x, uint8_t y);
+
+color565_t RGB_to_color(uint8_t r, uint8_t g, uint8_t b);
 
 #endif /* __SPI_H__ */

@@ -26,6 +26,7 @@
 #include <ti/devices/msp/msp.h>
 #include "clock.h"
 #include "ST7735S.h"
+#include "LaunchPad.h"
 
 
 //-----------------------------------------------------------------------------
@@ -49,7 +50,6 @@
 int main(void)
 {
   clock_init_40mhz();
-  clock_init_80mhz(0)
   launchpad_gpio_init();
 
   ST7735S_init();
@@ -59,7 +59,14 @@ int main(void)
     ST7735S_write_command(LCD_RAMWR_CMD);
     for (uint16_t i = 0; i < (128 * 128); i++)
     {
-      ST7735S_write_color(0x00FF);
+      ST7735S_write_color(RGB_to_color(0xFF, 0x00, 0x00));
+    }
+
+    ST7735S_set_addr(0, 0);
+    ST7735S_write_command(LCD_RAMWR_CMD);
+    for (uint16_t i = 0; i < (128 * 128); i++)
+    {
+      ST7735S_write_color(RGB_to_color(0x00, 0x00, 0xFF));
     }
   }
 

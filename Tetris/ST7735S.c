@@ -48,12 +48,12 @@ void send_init_commands(void)
   ST7735S_write_data(LCD_IFPF_16bit);
   msec_delay(10);
 
-  // ST7735S_set_addr(0, 0);
-  // ST7735S_write_command(LCD_RAMWR_CMD);
-  // for (uint16_t i = 0; i < (128 * 128); i++)
-  // {
-  //   ST7735S_write_color(0xFFFF);
-  // }
+  ST7735S_set_addr(0, 0);
+  ST7735S_write_command(LCD_RAMWR_CMD);
+  for (uint16_t i = 0; i < (128 * 128); i++)
+  {
+    ST7735S_write_color(RGB_to_color(0xFF, 0xFF, 0xFF));
+  }
 
   ST7735S_write_command(LCD_IDMOFF_CMD);
   ST7735S_write_command(LCD_NORON_CMD);
@@ -86,9 +86,6 @@ void ST7735S_init(void)
 
   IOMUX->SECCFG.PINCM[LP_SPI_CS0_IOMUX] = (IOMUX_PINCM_PC_CONNECTED |
                       LP_SPI_CS0_PFMODE);
-
-  // IOMUX->SECCFG.PINCM[LP_SPI_CS3_IOMUX] = (IOMUX_PINCM_PC_CONNECTED | 
-  //                     LP_SPI_CS3_PFMODE);
 
   // Select BusClk (SysClk) source for SPI module
   SPI1->CLKSEL = (SPI_CLKSEL_SYSCLK_SEL_ENABLE | SPI_CLKSEL_MFCLK_SEL_DISABLE |
@@ -135,7 +132,7 @@ void ST7735S_init(void)
   //Setup Reset Pin as input
   IOMUX->SECCFG.PINCM[ST7735S_RESET_IOMUX] = (IOMUX_PINCM_PC_CONNECTED | 
                       PINCM_GPIO_PIN_FUNC);
-  GPIOA->DOE31_0 |= ST7735S_RESET_MASK;
+  GPIOB->DOE31_0 |= ST7735S_RESET_MASK;
 
   //Setup Register Select
   IOMUX->SECCFG.PINCM[ST7735S_REG_SEL_IOMUX] = (IOMUX_PINCM_PC_CONNECTED | 
@@ -148,15 +145,11 @@ void ST7735S_init(void)
 void ST7735S_write_command(uint8_t data)
 {
   while((SPI1->STAT & SPI_STAT_BUSY_MASK) == SPI_STAT_BUSY_ACTIVE); 
-  
-  // SPI1->CTL1 |= SPI_CTL1_CDMODE_1BYTE;
-  
   GPIOA->DOUT31_0 &= ~ST7735S_REG_SEL_MASK;
 
   SPI1->TXDATA = data;
 
   while((SPI1->STAT & SPI_STAT_BUSY_MASK) == SPI_STAT_BUSY_ACTIVE); 
-
   GPIOA->DOUT31_0 |= ST7735S_REG_SEL_MASK;
 }
 
@@ -168,10 +161,10 @@ void ST7735S_write_data(uint8_t data)
   SPI1->TXDATA = data;
 }
 
-void ST7735S_write_color(uint16_t color)
+void ST7735S_write_color(color565_t color)
 {
-  ST7735S_write_data(color >> 8);
-  ST7735S_write_data(color);
+  ST7735S_write_data(color.packet[1]);
+  ST7735S_write_data(color.packet[0]);
 }
 
 void ST7735S_set_addr(uint8_t x, uint8_t y) 
@@ -188,4 +181,9 @@ void ST7735S_set_addr(uint8_t x, uint8_t y)
   ST7735S_write_data(0x01 + y); //Start LSB = YS[ 7:0]
   ST7735S_write_data(0x00);     //End MSB   = YE[15:8]
   ST7735S_write_data(0x80);     //End LSB   = YE[ 7:0]
+}
+
+color565_t RGB_to_color(uint8_t r, uint8_t g, uint8_t b) 
+{
+  return (color565_t){ .r = r, .g = g, .b = b};
 }
