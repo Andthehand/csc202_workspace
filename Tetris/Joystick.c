@@ -67,9 +67,13 @@
 #include <ti/devices/msp/msp.h>
 #include "ti/devices/msp/peripherals/hw_adc12.h"
 #include "clock.h"
-#include "adc.h"
+#include "Joystick.h"
 
-
+void joystick_init(void) 
+{
+  ADC0_init();
+  ADC1_init();
+}
 
 //-----------------------------------------------------------------------------
 // DESCRIPTION:
@@ -102,26 +106,16 @@
 // RETURN:
 //   none
 // -----------------------------------------------------------------------------
-void ADC0_init(uint32_t reference)
+void ADC0_init()
 {
   // Reset ADC and VREF
   ADC0->ULLMEM.GPRCM.RSTCTL = (ADC12_RSTCTL_KEY_UNLOCK_W | 
                                ADC12_RSTCTL_RESETSTKYCLR_CLR | 
                                ADC12_RSTCTL_RESETASSERT_ASSERT);
   
-  if(reference == ADC12_MEMCTL_VRSEL_INTREF_VSSA)
-  {
-    VREF->GPRCM.RSTCTL = 0xB1000003;
-  } /* if */
-  
   // Enable power ADC and VREF
   ADC0->ULLMEM.GPRCM.PWREN = (ADC12_PWREN_KEY_UNLOCK_W |
                               ADC12_PWREN_ENABLE_ENABLE);
-  
-  if(reference == ADC12_MEMCTL_VRSEL_INTREF_VSSA)
-  {
-    VREF->GPRCM.PWREN = 0x26000001;
-  } /* if */
   
   clock_delay(24); // time for ADC and VREF to power up
   
@@ -140,23 +134,36 @@ void ADC0_init(uint32_t reference)
 
   // Configure Sample Time Compare 0 Register
   ADC0->ULLMEM.SCOMP0 = 0; // 8 sample clocks
+} /* ADC0_init */
+
+void ADC1_init()
+{
+  // Reset ADC and VREF
+  ADC1->ULLMEM.GPRCM.RSTCTL = (ADC12_RSTCTL_KEY_UNLOCK_W | 
+                               ADC12_RSTCTL_RESETSTKYCLR_CLR | 
+                               ADC12_RSTCTL_RESETASSERT_ASSERT);
   
-  if(reference == ADC12_MEMCTL_VRSEL_INTREF_VSSA)
-  {
-    VREF->CLKSEL = 0x00000008; // bus clock
-    VREF->CLKDIV = 0; // divide by 1
+  // Enable power ADC and VREF
+  ADC1->ULLMEM.GPRCM.PWREN = (ADC12_PWREN_KEY_UNLOCK_W |
+                              ADC12_PWREN_ENABLE_ENABLE);
+  
+  clock_delay(24); // time for ADC and VREF to power up
+  
+  // Set ADC clock configuration
+  ADC1->ULLMEM.GPRCM.CLKCFG = (ADC12_CLKCFG_KEY_UNLOCK_W | 
+                               ADC12_CLKCFG_CCONSTOP_DISABLE | 
+                               ADC12_CLKCFG_CCONRUN_DISABLE | 
+                               ADC12_CLKCFG_SAMPCLK_ULPCLK); 
 
-    // bit 8 SHMODE = off
-    // bit 7 BUFCONFIG=0 for 2.4 (=1 for 1.4)
-    // bit 0 is enable
-    VREF->CTL0 = 0x0001;
+  // Set sampling clock frequency range
+  ADC1->ULLMEM.CLKFREQ = ADC12_CLKFREQ_FRANGE_RANGE40TO48;
+  
+  // Configure ADC Control Register 0
+  ADC1->ULLMEM.CTL0 = ADC12_CTL0_SCLKDIV_DIV_BY_8 | ADC12_CTL0_PWRDN_MANUAL |
+                      ADC12_CTL0_ENC_OFF;
 
-    // bits 31-16 HCYCLE=0
-    // bits 15-0 SHCYCLE=0
-    VREF->CTL2 = 0;
-    while((VREF->CTL1 & 0x01)==0){}; // wait for VREF to be ready
-  } /* if */
-
+  // Configure Sample Time Compare 0 Register
+  ADC1->ULLMEM.SCOMP0 = 0; // 8 sample clocks
 } /* ADC0_init */
 
 
@@ -222,62 +229,44 @@ uint32_t ADC0_in(uint8_t channel)
 
 } /* ADC0_in */
 
-
-//-----------------------------------------------------------------------------
-// DESCRIPTION:
-//   This function calculates the temperature in degrees Celsius from the raw
-//   ADC value obtained from the TMP61 thermistor sensor. The temperature is
-//   computed using a 4th-order polynomial regression based on coefficients 
-//   provided in the TMP61 design guide.
-//
-//   The calculation uses the following steps:
-//   1. Convert the raw ADC value to a voltage using the reference voltage 
-//      (VBias) and the ADC resolution.
-//   2. Apply a 4th-order polynomial regression formula to convert the 
-//      voltage to a temperature value.
-//
-//   The polynomial coefficients used are specific to the TMP61 sensor and 
-//   are defined as THRM_A0 through THRM_A4.
-//
-// INPUT PARAMETERS:
-//   raw_ADC - The raw ADC value from the TMP61 thermistor sensor. This is
-//             an integer representing the analog-to-digital conversion 
-//             result.
-//
-// OUTPUT PARAMETERS:
-//   none
-//
-// RETURN:
-//   float - The calculated temperature in degrees Celsius based on the raw 
-//           ADC value.
-// -----------------------------------------------------------------------------
-float thermistor_calc_temperature(int raw_ADC)
+uint32_t ADC1_in(uint8_t channel)
 {
-  #define THRM_A0    -4.232811E+02
-  #define THRM_A1     4.728797E+02
-  #define THRM_A2    -1.988841E+02
-  #define THRM_A3     4.869521E+01
-  #define THRM_A4    -1.158754E+00
+  // Configure ADC Control Register 1
+  ADC1->ULLMEM.CTL1 = (ADC12_CTL1_AVGD_SHIFT0 | ADC12_CTL1_AVGN_DISABLE |
+                       ADC12_CTL1_SAMPMODE_AUTO | ADC12_CTL1_CONSEQ_SINGLE |
+                       ADC12_CTL1_SC_STOP | ADC12_CTL1_TRIGSRC_SOFTWARE);
+                       
+  // Configure ADC Control Register 2
+  ADC1->ULLMEM.CTL2 = (ADC12_CTL2_ENDADD_ADDR_00 | ADC12_CTL2_STARTADD_ADDR_00 |
+                       ADC12_CTL2_SAMPCNT_MIN | ADC12_CTL2_FIFOEN_DISABLE |
+                       ADC12_CTL2_DMAEN_DISABLE | ADC12_CTL2_RES_BIT_12 |
+                       ADC12_CTL2_DF_UNSIGNED);
 
-  #define ADC_BITS   4096     // ADC (2^# of ADC Bit Value)
+  // Configure Conversion Memory Control Register
+  ADC1->ULLMEM.MEMCTL[0] =  ADC12_MEMCTL_WINCOMP_DISABLE | 
+                      ADC12_MEMCTL_TRIG_AUTO_NEXT | ADC12_MEMCTL_BCSEN_DISABLE | 
+                      ADC12_MEMCTL_AVGEN_DISABLE | ADC12_MEMCTL_STIME_SEL_SCOMP0 | 
+                      ADC12_MEMCTL_VRSEL_VDDA_VSSA | channel;
 
-  // set the VBIAS voltage
-  float VBias                            = 3.30;  
-
-  // set up the variable for the measured voltage
-  float VTEMP     = 0;  
-  float THRM_TEMP = 0;  // setup the variable for the calculated temperature
-
-  // calculate volts per bit then multiply that times the ADV value
-  VTEMP = (VBias / ADC_BITS) * raw_ADC;  
-
-  // 4th order regression to get temperature
-  THRM_TEMP = (THRM_A4 * powf(VTEMP, 4)) + (THRM_A3 * powf(VTEMP, 3)) +
-              (THRM_A2 * powf(VTEMP, 2)) + (THRM_A1 * VTEMP) +
-              THRM_A0;    
+  ADC1->ULLMEM.CTL0 |= ADC12_CTL0_ENC_ON;
+  ADC1->ULLMEM.CTL1 |= ADC12_CTL1_SC_START; 
   
-  return (THRM_TEMP);
+  clock_delay(2); // TODO: required for 80Mhz clock to work TBR TODO:
 
-} /* thermistor_calc_temperature */
+  volatile uint32_t *status_reg = (volatile uint32_t *)&(ADC1->ULLMEM.STATUS);
 
+  // wait here until the conversion completes
+  while((*status_reg & ADC12_STATUS_BUSY_MASK) == ADC12_STATUS_BUSY_ACTIVE);
+  
+  return ADC1->ULLMEM.MEMRES[0];
 
+} /* ADC0_in */
+
+joystick_pos read_joystick() 
+{
+  joystick_pos pos;
+  pos.x_pos = ADC1_in(JOYSTICK_X_AXIS_CHANNEL);
+  pos.y_pos = ADC0_in(JOYSTICK_Y_AXIS_CHANNEL);
+
+  return pos;
+}

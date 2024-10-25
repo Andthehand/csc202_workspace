@@ -65,15 +65,31 @@
 //-----------------------------------------------------------------------------
 // Loads MSP launchpad board support macros and definitions
 //-----------------------------------------------------------------------------
+#define JOYSTICK_BUTTON_AXIS_PORT                                   (GPIO_PORTA)
+#define JOYSTICK_BUTTON_AXIS_MASK                                      (1 << 26)
+#define JOYSTICK_BUTTON_AXIS_IOMUX                               (IOMUX_PINCM59)
 
+#define JOYSTICK_Y_AXIS_CHANNEL                                              (2)
+#define JOYSTICK_X_AXIS_CHANNEL                                              (3)
+
+#define JOYSTICK_CENTER_VALUE                                       ((2^12) / 2)
+#define JOYSTICK_DEADZONE_VALUE                                              200
+
+typedef struct {
+  uint16_t x_pos;
+  uint16_t y_pos;
+} joystick_pos;
 
 // ----------------------------------------------------------------------------
 // Prototype for support functions
 // ----------------------------------------------------------------------------
-void ADC0_init(uint32_t reference);
-float thermistor_calc_temperature(int raw_ADC);
+void joystick_init(void);
+void ADC0_init();
+void ADC1_init();
+
 uint32_t ADC0_in(uint8_t channel);
+uint32_t ADC1_in(uint8_t channel);
 
-
+joystick_pos read_joystick();
 
 #endif /* __ADC_H__ */

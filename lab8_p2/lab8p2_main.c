@@ -58,8 +58,8 @@ int main(void)
   clock_init_40mhz();
   launchpad_gpio_init();
 
-  I2C_init();
-  lcd1602_init();
+  // I2C_init();
+  // lcd1602_init();
 
   led_init();
   led_enable();
