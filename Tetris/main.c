@@ -28,6 +28,7 @@
 #include "ST7735S.h"
 #include "Joystick.h"
 #include "Events.h"
+#include "gfx.h"
 
 #include "LaunchPad.h"
 #include "clock.h"
@@ -59,18 +60,10 @@ int main(void)
 
   init_events();
 
-  bool pressed = false;
   //Game loop
   while (true) {
-    ST7735S_set_addr(0, 0);
-    ST7735S_write_command(LCD_RAMWR_CMD);
-    if (is_pb1_down(true)) {
-      pressed = !pressed;
-    }
-    for (uint16_t i = 0; i < (128 * 128); i++)
-    {
-      ST7735S_write_color(RGB_to_color(pressed ? 0x00 : 0xFF, 0x00, 0xFF));
-    }
+    draw_rectangle(0, 0, 100, 100, RGB_to_color(0xFF, 0x00, 0x00));
+    draw_rectangle(25, 25, 100, 100, RGB_to_color(0x00, 0x00, 0xFF));
   }
 
   // Endless loop to prevent program from ending

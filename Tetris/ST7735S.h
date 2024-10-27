@@ -18,8 +18,8 @@
 //******************************************************************************
 
 
-#ifndef __SPI_H__
-#define __SPI_H__
+#ifndef __ST7735S_H__
+#define __ST7735S_H__
 
 #define LP_SPI_CLK_PORT                                             (GPIO_PORTB)
 #define LP_SPI_CLK_MASK                                                 (1 << 9)
@@ -93,6 +93,13 @@
 #define LCD_IFPF_16bit                                                    (0x05)
 #define LCD_IFPF_18bit                                                    (0x06)
 
+#define LCD_MADCTL_MY_MASK                                                (0x80)
+#define LCD_MADCTL_MX_MASK                                                (0x40)
+#define LCD_MADCTL_MV_MASK                                                (0x20)
+#define LCD_MADCTL_ML_MASK                                                (0x10)
+#define LCD_MADCTL_RGB_MASK                                               (0x08)
+#define LCD_MADCTL_MH_MASK                                                (0x04)
+
 #define LCD_GAMMA_CUREVE_1                                                (0x01)
 #define LCD_GAMMA_CUREVE_2                                                (0x02)
 #define LCD_GAMMA_CUREVE_3                                                (0x04)
@@ -121,8 +128,10 @@ void ST7735S_write_command(uint8_t data);
 void ST7735S_write_data(uint8_t data);
 void ST7735S_write_color(color565_t color);
 
-void ST7735S_set_addr(uint8_t x, uint8_t y);
+void ST7735S_set_addr(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 
 color565_t RGB_to_color(uint8_t r, uint8_t g, uint8_t b);
+
+void draw_rectangle(uint8_t x, uint8_t y, uint8_t width, uint8_t height, color565_t color);
 
 #endif /* __SPI_H__ */

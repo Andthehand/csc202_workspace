@@ -117,8 +117,8 @@ bool is_pb1_down(bool handled)
 
   if(handled && g_PB1_Pressed) 
   {
-    g_PB1_Pressed = false;
     msec_delay(DEBOUNCE_DELAY);
+    g_PB1_Pressed = false;
   }
 
   return temp;
@@ -130,8 +130,8 @@ bool is_pb2_down(bool handled)
 
   if(handled && g_PB2_Pressed) 
   {
-    g_PB2_Pressed = false;
     msec_delay(DEBOUNCE_DELAY);
+    g_PB2_Pressed = false;
   }
 
   return temp;

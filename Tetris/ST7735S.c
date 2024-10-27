@@ -48,9 +48,12 @@ void send_init_commands(void)
   ST7735S_write_data(LCD_IFPF_16bit);
   msec_delay(10);
 
-  ST7735S_set_addr(0, 0);
+  ST7735S_write_command(LCD_MADCTL_CMD);
+  ST7735S_write_data(LCD_MADCTL_MY_MASK | LCD_MADCTL_MX_MASK);
+
+  ST7735S_set_addr(0, 0, LCD_WIDTH, LCD_HEIGHT);
   ST7735S_write_command(LCD_RAMWR_CMD);
-  for (uint16_t i = 0; i < (128 * 128); i++)
+  for (uint16_t i = 0; i < (LCD_WIDTH * LCD_HEIGHT); i++)
   {
     ST7735S_write_color(RGB_to_color(0xFF, 0xFF, 0xFF));
   }
@@ -167,20 +170,19 @@ void ST7735S_write_color(color565_t color)
   ST7735S_write_data(color.packet[0]);
 }
 
-void ST7735S_set_addr(uint8_t x, uint8_t y) 
+void ST7735S_set_addr(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) 
 {
-  ST7735S_write_command(LCD_CASET_CMD); //Column address set
-  //Write the parameters for the "column address set" command
-  ST7735S_write_data(0x00);     //Start MSB = XS[15:8]
-  ST7735S_write_data(0x02 + x); //Start LSB = XS[ 7:0]
-  ST7735S_write_data(0x00);     //End MSB   = XE[15:8]
-  ST7735S_write_data(0x81);     //End LSB   = XE[ 7:0]
+  ST7735S_write_command(LCD_CASET_CMD);
+  ST7735S_write_data(0x00);
+  ST7735S_write_data(0x00 + x0);
+  ST7735S_write_data(0x00);
+  ST7735S_write_data(0x01 + x1);
 
-  ST7735S_write_command(LCD_RASET_CMD); //Row address set
-  ST7735S_write_data(0x00);     //Start MSB = YS[15:8]
-  ST7735S_write_data(0x01 + y); //Start LSB = YS[ 7:0]
-  ST7735S_write_data(0x00);     //End MSB   = YE[15:8]
-  ST7735S_write_data(0x80);     //End LSB   = YE[ 7:0]
+  ST7735S_write_command(LCD_RASET_CMD);
+  ST7735S_write_data(0x00);
+  ST7735S_write_data(0x00 + y0);
+  ST7735S_write_data(0x00);
+  ST7735S_write_data(0x01 + y1);
 }
 
 color565_t RGB_to_color(uint8_t r, uint8_t g, uint8_t b) 
