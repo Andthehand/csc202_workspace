@@ -17,15 +17,21 @@
 // *****************************************************************************
 //******************************************************************************
 
-#ifndef __GFX_H__
-#define __GFX_H__
+#ifndef __BUZZER_H__
+#define __BUZZER_H__
 
-#include "ST7735S.h"
+#define BUZZER_PORT                                                 (GPIO_PORTB)
+#define BUZZER_MASK                                                     (1 << 4)
+#define BUZZER_IOMUX                                             (IOMUX_PINCM17)
+
+#define TIMA_CLOCK_FREQ                                                   200000
 
 // ----------------------------------------------------------------------------
 // Prototype for support functions
 // ----------------------------------------------------------------------------
 
-void draw_rectangle(uint8_t x, uint8_t y, uint8_t width, uint8_t height, color565_t color);
+void buzzer_init(void);
 
-#endif /* __SPI_H__ */
+void buzzer_tone(uint16_t frequency);
+
+#endif /* __BUZZER_H__ */

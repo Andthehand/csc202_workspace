@@ -26,7 +26,7 @@
 //-----------------------------------------------------------------------------
 #include <ti/devices/msp/msp.h>
 #include "clock.h"
-#include "ST7735S.h"
+#include "gfx.h"
 
 void draw_rectangle(uint8_t x, uint8_t y, uint8_t width, uint8_t height, color565_t color)
 {

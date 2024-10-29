@@ -1759,7 +1759,7 @@ void motor0_pwm_init(uint32_t load_value, uint32_t compare_value)
   // set C0 as output
   TIMA0->COMMONREGS.CCPD =(GPTIMER_CCPD_C0CCP3_OUTPUT | 
          GPTIMER_CCPD_C0CCP2_INPUT | GPTIMER_CCPD_C0CCP1_INPUT | 
-         GPTIMER_CCPD_C0CCP0_INPUT);
+         GPTIMER_CCPD_C0CCP0_INPUT);;
 
 } /* motor0_pwm_init */
 
