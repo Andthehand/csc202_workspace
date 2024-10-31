@@ -43,10 +43,10 @@ void run_lab9_part1();
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
 #define PART1_STRING_SPEED                                         "MOTOR SPEED"
-#define PART1_CHAR_PERCENT                                                0x52
+#define PART1_CHAR_PERCENT                                                  0x25
 #define PART1_STRING_END                                       "Program Stopped"
 #define PART1_NIBBLE_TO_PERCENT                                         (100/16)
-#define PART1_DELAY                                                          100
+#define PART1_DELAY                                                          500
 
 //-----------------------------------------------------------------------------
 // Define global variables and structures here.
@@ -72,6 +72,9 @@ int main(void)
 
   dipsw_init();
   keypad_init();
+
+  led_init();
+  led_enable();
 
   I2C_init();
   lcd1602_init();
@@ -226,7 +229,10 @@ void run_lab9_part1()
   lcd_set_ddram_addr(LCD_LINE1_ADDR + LCD_CHAR_POSITION_3);
   lcd_write_string(PART1_STRING_SPEED);
 
-  MOTOR_STATE state = MOTOR_OFF1;
+  led_on(1);
+  led_off(2);
+
+  MOTOR_STATE state = MOTOR_OFF2;
   while (!g_PB1_Pressed) 
   {
     if(keypad_scan() != 0x10)
@@ -270,6 +276,9 @@ void run_lab9_part1()
       g_PB2_Pressed = false;
     }
   }
+
+  motor0_pwm_disable();
+  led_disable();
 
   lcd_clear();
   lcd_write_string(PART1_STRING_END);

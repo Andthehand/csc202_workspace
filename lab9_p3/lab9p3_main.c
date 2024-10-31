@@ -38,25 +38,18 @@ void init_PB2_irq();
 void disable_PB1_irq();
 void disable_PB2_irq();
 
-void run_lab9_part2();
+void run_lab9_part3();
 
 //-----------------------------------------------------------------------------
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
-#define PART2_STRING_SPEED                                            "SPEED = "
-#define PART2_CHAR_PERCENT                                                  0x25
-#define PART2_STRING_END                                       "Program Stopped"
-#define PART2_NIBBLE_TO_PERCENT                                         (100/16)
-#define PART2_DELAY                                                          250
-
-#define PART2_STRING_TEMP                                             "Temp = "
-#define PART2_CHAR_FAHRENHEIT                                               'F'
-#define PART2_CHAR_DEGREE                                                  0xDF
-#define PART2_CHANNEL_TEMP                                                    5
-#define PART2_FAHRENHEIT_CONVERSTION                             9.0 / 5.0 + 32
-#define PART2_COOLING_TEMP                                                   73
-#define PART2_SPEED_HIGH                                                     80
-#define PART2_SPEED_LOW                                                      25
+#define PART3_STRING_SPEED                                         "MOTOR SPEED"
+#define PART3_STRING_END                                       "Program Stopped"
+#define PART3_STRING_ADC                                           "ADC VALUE ="
+#define PART3_STRING_SERVO                                         "SERVO CNT ="
+#define PART3_NIBBLE_TO_PERCENT                                         (100/16)
+#define PART3_DELAY                                                          250
+#define PART3_CHANNEL                                                          7
 
 //-----------------------------------------------------------------------------
 // Define global variables and structures here.
@@ -66,6 +59,12 @@ bool g_PB1_Pressed = false;
 bool g_PB2_Pressed = false;
 
 // Define a structure to hold different data types
+typedef enum {
+  MOTOR_OFF1,
+  MOTOR_CW,
+  MOTOR_OFF2,
+  MOTOR_CCW
+} MOTOR_STATE;
 
 int main(void)
 {
@@ -75,10 +74,6 @@ int main(void)
   lcd1602_init();
 
   dipsw_init();
-  keypad_init();
-
-  led_init();
-  led_enable();
 
   ADC0_init(ADC12_MEMCTL_VRSEL_VDDA_VSSA);
 
@@ -92,7 +87,7 @@ int main(void)
   init_PB1_irq();
   init_PB2_irq();
 
-  run_lab9_part2();
+  run_lab9_part3();
 
   disable_PB1_irq();
   disable_PB2_irq();
@@ -230,45 +225,37 @@ void GROUP1_IRQHandler(void)
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
-void run_lab9_part2() 
+void run_lab9_part3() 
 {
+  lcd_set_ddram_addr(LCD_LINE1_ADDR + LCD_CHAR_POSITION_3);
+  lcd_write_string(PART3_STRING_SPEED);
+
   led_on(1);
   led_off(2);
 
+  MOTOR_STATE state = MOTOR_OFF2;
   while (!g_PB1_Pressed) 
   {
-    uint16_t temp_value = ADC0_in(PART2_CHANNEL_TEMP);
-    float celsius_temp = thermistor_calc_temperature(temp_value);
-    float fahrenheit_temp = celsius_temp * PART2_FAHRENHEIT_CONVERSTION;
+    uint16_t value = ADC0_in(PART3_CHANNEL);
 
-    lcd_set_ddram_addr(LCD_LINE1_ADDR + LCD_CHAR_POSITION_3);
-    lcd_write_string(PART2_STRING_TEMP);
-    lcd_write_byte(fahrenheit_temp);
-    lcd_write_char(PART2_CHAR_DEGREE);
-    lcd_write_char(PART2_CHAR_FAHRENHEIT);
+    value >>= 2;
 
-    uint8_t speed = 0;
-    if(fahrenheit_temp < PART2_COOLING_TEMP)
-    {
-      speed = PART2_SPEED_LOW;
-    }
-    else 
-    {
-      speed = PART2_SPEED_HIGH;
-    }
+    lcd_set_ddram_addr(LCD_LINE1_ADDR);
+    lcd_write_string(PART3_STRING_ADC);
+    lcd_write_doublebyte(value);
 
-    motor0_set_pwm_dc(speed);
+    uint16_t servo = ((value * (500 - 100))/1024) + 100;
 
-    lcd_set_ddram_addr(LCD_LINE2_ADDR + LCD_CHAR_POSITION_2);
-    lcd_write_string(PART2_STRING_SPEED);
-    lcd_write_byte(speed);
-    lcd_write_char(PART2_CHAR_PERCENT);
+    lcd_set_ddram_addr(LCD_LINE2_ADDR);
+    lcd_write_string(PART3_STRING_SERVO);
+    lcd_write_doublebyte(servo);
 
-    msec_delay(PART2_DELAY);
+    motor0_set_pwm_count(servo);
   }
+
   motor0_pwm_disable();
   led_disable();
 
   lcd_clear();
-  lcd_write_string(PART2_STRING_END);
+  lcd_write_string(PART3_STRING_END);
 }
