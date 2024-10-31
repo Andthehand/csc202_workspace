@@ -27,6 +27,7 @@
 #include "clock.h"
 #include "LaunchPad.h"
 #include "lcd1602.h"
+#include "adc.h"
 
 //-----------------------------------------------------------------------------
 // Define function prototypes used by the program
@@ -37,16 +38,25 @@ void init_PB2_irq();
 void disable_PB1_irq();
 void disable_PB2_irq();
 
-void run_lab9_part1();
+void run_lab9_part2();
 
 //-----------------------------------------------------------------------------
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
-#define PART1_STRING_SPEED                                         "MOTOR SPEED"
-#define PART1_CHAR_PERCENT                                                0x52
-#define PART1_STRING_END                                       "Program Stopped"
-#define PART1_NIBBLE_TO_PERCENT                                         (100/16)
-#define PART1_DELAY                                                          100
+#define PART2_STRING_SPEED                                            "SPEED = "
+#define PART2_CHAR_PERCENT                                                  0x52
+#define PART2_STRING_END                                       "Program Stopped"
+#define PART2_NIBBLE_TO_PERCENT                                         (100/16)
+#define PART2_DELAY                                                          250
+
+#define PART2_STRING_TEMP                                             "Temp = "
+#define PART2_CHAR_FAHRENHEIT                                               'F'
+#define PART2_CHAR_DEGREE                                                  0xDF
+#define PART2_CHANNEL_TEMP                                                    5
+#define PART2_FAHRENHEIT_CONVERSTION                             9.0 / 5.0 + 32
+#define PART2_COOLING_TEMP                                                   70
+#define PART2_SPEED_HIGH                                                     80
+#define PART2_SPEED_LOW                                                      25
 
 //-----------------------------------------------------------------------------
 // Define global variables and structures here.
@@ -56,12 +66,6 @@ bool g_PB1_Pressed = false;
 bool g_PB2_Pressed = false;
 
 // Define a structure to hold different data types
-typedef enum {
-  MOTOR_OFF1,
-  MOTOR_CW,
-  MOTOR_OFF2,
-  MOTOR_CCW
-} MOTOR_STATE;
 
 int main(void)
 {
@@ -73,6 +77,8 @@ int main(void)
   dipsw_init();
   keypad_init();
 
+  ADC0_init(ADC12_MEMCTL_VRSEL_VDDA_VSSA);
+
   I2C_init();
   lcd1602_init();
 
@@ -83,7 +89,7 @@ int main(void)
   init_PB1_irq();
   init_PB2_irq();
 
-  run_lab9_part1();
+  run_lab9_part2();
 
   disable_PB1_irq();
   disable_PB2_irq();
@@ -221,56 +227,42 @@ void GROUP1_IRQHandler(void)
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
-void run_lab9_part1() 
+void run_lab9_part2() 
 {
-  lcd_set_ddram_addr(LCD_LINE1_ADDR + LCD_CHAR_POSITION_3);
-  lcd_write_string(PART1_STRING_SPEED);
+  led_on(1);
+  led_off(2);
 
-  MOTOR_STATE state = MOTOR_OFF1;
   while (!g_PB1_Pressed) 
   {
-    if(keypad_scan() != 0x10)
+    uint16_t temp_value = ADC0_in(PART2_CHANNEL_TEMP);
+    float celsius_temp = thermistor_calc_temperature(temp_value);
+    float fahrenheit_temp = celsius_temp * PART2_FAHRENHEIT_CONVERSTION;
+
+    lcd_set_ddram_addr(LCD_LINE1_ADDR + LCD_CHAR_POSITION_3);
+    lcd_write_string(PART2_STRING_TEMP);
+    lcd_write_byte(fahrenheit_temp);
+    lcd_write_char(PART2_CHAR_DEGREE);
+    lcd_write_char(PART2_CHAR_FAHRENHEIT);
+
+    uint8_t speed = 0;
+    if(fahrenheit_temp < PART2_COOLING_TEMP)
     {
-      uint8_t speed = keypad_scan() * PART1_NIBBLE_TO_PERCENT;
-
-      motor0_set_pwm_dc(speed);
-
-      lcd_set_ddram_addr(LCD_LINE2_ADDR + LCD_CHAR_POSITION_6);
-      lcd_write_byte(speed);
-      lcd_write_char(PART1_CHAR_PERCENT);
-
-      wait_no_key_pressed();
+      speed = PART2_SPEED_LOW;
+    }
+    else 
+    {
+      speed = PART2_SPEED_HIGH;
     }
 
-    if (g_PB2_Pressed) {
-      switch (state) {
-        case MOTOR_OFF1:
-          motor0_pwm_disable();
-          state = MOTOR_CW;
-          break;
-        case MOTOR_CW:
-          motor0_pwm_enable();
-          led_on(1);
-          led_off(2);
-          state = MOTOR_OFF2;
-          break;
-        case MOTOR_OFF2:
-          motor0_pwm_disable();
-          state = MOTOR_CCW;
-          break;
-        case MOTOR_CCW:
-          motor0_pwm_enable();
-          led_on(2);
-          led_off(1);
-          state = MOTOR_OFF1;
-          break;
-      }
+    lcd_set_ddram_addr(LCD_LINE2_ADDR + LCD_CHAR_POSITION_2);
+    lcd_write_string(PART2_STRING_SPEED);
+    lcd_write_byte(speed);
+    lcd_write_char(PART2_CHAR_PERCENT)
 
-      msec_delay(PART1_DELAY);
-      g_PB2_Pressed = false;
-    }
+    msec_delay(PART2_DELAY);
   }
+  
 
   lcd_clear();
-  lcd_write_string(PART1_STRING_END);
+  lcd_write_string(PART2_STRING_END);
 }
