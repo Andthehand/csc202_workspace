@@ -3,9 +3,9 @@
 //*****************************************************************************
 //  DESIGNER NAME:  Andrew DeFord
 //
-//       LAB NAME:  TBD
+//       LAB NAME:  Lab 9 Part 3
 //
-//      FILE NAME:  main.c
+//      FILE NAME:  lab9p3_main.c
 //
 //-----------------------------------------------------------------------------
 //
@@ -47,9 +47,13 @@ void run_lab9_part3();
 #define PART3_STRING_END                                       "Program Stopped"
 #define PART3_STRING_ADC                                           "ADC VALUE ="
 #define PART3_STRING_SERVO                                         "SERVO CNT ="
-#define PART3_NIBBLE_TO_PERCENT                                         (100/16)
-#define PART3_DELAY                                                          250
+
+#define PART3_SERVO_MIN_COUNT                                                100
+#define PART3_SERVO_MAX_COUNT                                                500
+#define PART3_12_BIT_MAX                                                    1024
+#define PART3_SHIFT_TO_1024                                                    2
 #define PART3_CHANNEL                                                          7
+#define PART3_DELAY                                                          250
 
 //-----------------------------------------------------------------------------
 // Define global variables and structures here.
@@ -59,19 +63,11 @@ bool g_PB1_Pressed = false;
 bool g_PB2_Pressed = false;
 
 // Define a structure to hold different data types
-typedef enum {
-  MOTOR_OFF1,
-  MOTOR_CW,
-  MOTOR_OFF2,
-  MOTOR_CCW
-} MOTOR_STATE;
 
 int main(void)
 {
   clock_init_40mhz();
   launchpad_gpio_init();
-
-  lcd1602_init();
 
   dipsw_init();
 
@@ -225,37 +221,54 @@ void GROUP1_IRQHandler(void)
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This function reads ADC values in a loop, updating the LCD with 
+//  the ADC reading and corresponding servo position. It adjusts 
+//  the motor's PWM based on the servo value and continues until 
+//  a specific button (g_PB1_Pressed) is pressed. After exiting, 
+//  it disables the motor, turns off the LEDs, and clears the LCD.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab9_part3() 
 {
   lcd_set_ddram_addr(LCD_LINE1_ADDR + LCD_CHAR_POSITION_3);
   lcd_write_string(PART3_STRING_SPEED);
 
-  led_on(1);
-  led_off(2);
+  led_on(LED_BAR_LD1_IDX);
+  led_off(LED_BAR_LD2_IDX);
 
-  MOTOR_STATE state = MOTOR_OFF2;
   while (!g_PB1_Pressed) 
   {
     uint16_t value = ADC0_in(PART3_CHANNEL);
 
-    value >>= 2;
+    value >>= PART3_SHIFT_TO_1024;
 
     lcd_set_ddram_addr(LCD_LINE1_ADDR);
     lcd_write_string(PART3_STRING_ADC);
     lcd_write_doublebyte(value);
 
-    uint16_t servo = ((value * (500 - 100))/1024) + 100;
+    uint16_t servo = ((value * (PART3_SERVO_MAX_COUNT - PART3_SERVO_MIN_COUNT))
+                      / PART3_12_BIT_MAX) + PART3_SERVO_MIN_COUNT;
 
     lcd_set_ddram_addr(LCD_LINE2_ADDR);
     lcd_write_string(PART3_STRING_SERVO);
     lcd_write_doublebyte(servo);
 
     motor0_set_pwm_count(servo);
-  }
+  } /* while */
 
   motor0_pwm_disable();
   led_disable();
 
   lcd_clear();
   lcd_write_string(PART3_STRING_END);
-}
+} /* run_lab9_part3 */

@@ -268,6 +268,6 @@ void run_lab8_part3() {
   } /* while */
 
   lcd_clear();
-  lcd_write_string();
+  lcd_write_string(PART3_STRING_END);
   led_disable();
-}
+} /* run_lab8_part3 */

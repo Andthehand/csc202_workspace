@@ -3,9 +3,9 @@
 //*****************************************************************************
 //  DESIGNER NAME:  Andrew DeFord
 //
-//       LAB NAME:  TBD
+//       LAB NAME:  Lab 9 Part 2
 //
-//      FILE NAME:  main.c
+//      FILE NAME:  lab9p2_main.c
 //
 //-----------------------------------------------------------------------------
 //
@@ -43,20 +43,21 @@ void run_lab9_part2();
 //-----------------------------------------------------------------------------
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
+#define PART2_STRING_TEMP                                              "Temp = "
 #define PART2_STRING_SPEED                                            "SPEED = "
-#define PART2_CHAR_PERCENT                                                  0x25
 #define PART2_STRING_END                                       "Program Stopped"
-#define PART2_NIBBLE_TO_PERCENT                                         (100/16)
-#define PART2_DELAY                                                          250
 
-#define PART2_STRING_TEMP                                             "Temp = "
-#define PART2_CHAR_FAHRENHEIT                                               'F'
-#define PART2_CHAR_DEGREE                                                  0xDF
-#define PART2_CHANNEL_TEMP                                                    5
-#define PART2_FAHRENHEIT_CONVERSTION                             9.0 / 5.0 + 32
-#define PART2_COOLING_TEMP                                                   73
-#define PART2_SPEED_HIGH                                                     80
-#define PART2_SPEED_LOW                                                      25
+#define PART2_CHAR_PERCENT                                                  0x25
+#define PART2_CHAR_DEGREE                                                   0xDF
+#define PART2_CHAR_FAHRENHEIT                                                'F'
+
+#define PART2_FAHRENHEIT_CONVERSTION                              9.0 / 5.0 + 32
+
+#define PART2_CHANNEL_TEMP                                                     5
+#define PART2_COOLING_TEMP                                                    73
+#define PART2_SPEED_HIGH                                                      80
+#define PART2_SPEED_LOW                                                       25
+#define PART2_DELAY                                                          250
 
 //-----------------------------------------------------------------------------
 // Define global variables and structures here.
@@ -72,10 +73,7 @@ int main(void)
   clock_init_40mhz();
   launchpad_gpio_init();
 
-  lcd1602_init();
-
   dipsw_init();
-  keypad_init();
 
   led_init();
   led_enable();
@@ -230,10 +228,28 @@ void GROUP1_IRQHandler(void)
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This function monitors temperature using an ADC input in a loop, 
+//  updating the LCD with the temperature in Fahrenheit and adjusting 
+//  the motor speed based on temperature thresholds. It activates an 
+//  LED indicator and continues until a specific button (g_PB1_Pressed) 
+//  is pressed. After exiting the loop, it disables the motor, turns 
+//  off the LEDs, and clears the LCD.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab9_part2() 
 {
-  led_on(1);
-  led_off(2);
+  led_on(LED_BAR_LD1_IDX);
+  led_off(LED_BAR_LD2_IDX);
 
   while (!g_PB1_Pressed) 
   {
@@ -247,28 +263,28 @@ void run_lab9_part2()
     lcd_write_char(PART2_CHAR_DEGREE);
     lcd_write_char(PART2_CHAR_FAHRENHEIT);
 
-    uint8_t speed = 0;
+    uint8_t motor_speed = 0;
     if(fahrenheit_temp < PART2_COOLING_TEMP)
     {
-      speed = PART2_SPEED_LOW;
-    }
+      motor_speed = PART2_SPEED_LOW;
+    } /* if */
     else 
     {
-      speed = PART2_SPEED_HIGH;
-    }
+      motor_speed = PART2_SPEED_HIGH;
+    } /* else */
 
-    motor0_set_pwm_dc(speed);
+    motor0_set_pwm_dc(motor_speed);
 
     lcd_set_ddram_addr(LCD_LINE2_ADDR + LCD_CHAR_POSITION_2);
     lcd_write_string(PART2_STRING_SPEED);
-    lcd_write_byte(speed);
+    lcd_write_byte(motor_speed);
     lcd_write_char(PART2_CHAR_PERCENT);
 
     msec_delay(PART2_DELAY);
-  }
+  } /* while */
   motor0_pwm_disable();
   led_disable();
 
   lcd_clear();
   lcd_write_string(PART2_STRING_END);
-}
+} /* run_lab9_part2 */

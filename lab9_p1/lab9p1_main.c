@@ -3,14 +3,14 @@
 //*****************************************************************************
 //  DESIGNER NAME:  Andrew DeFord
 //
-//       LAB NAME:  TBD
+//       LAB NAME:  Lab 9 Part 1
 //
-//      FILE NAME:  main.c
+//      FILE NAME:  lab9p1_main.c
 //
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    This program serves as a ... 
+//    This program controls a motor
 //
 //*****************************************************************************
 //*****************************************************************************
@@ -43,9 +43,11 @@ void run_lab9_part1();
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
 #define PART1_STRING_SPEED                                         "MOTOR SPEED"
-#define PART1_CHAR_PERCENT                                                  0x25
 #define PART1_STRING_END                                       "Program Stopped"
+#define PART1_CHAR_PERCENT                                                  0x25
+
 #define PART1_NIBBLE_TO_PERCENT                                         (100/16)
+#define PART1_KEYPAD_NO_KEY                                                 0x10
 #define PART1_DELAY                                                          500
 
 //-----------------------------------------------------------------------------
@@ -67,8 +69,6 @@ int main(void)
 {
   clock_init_40mhz();
   launchpad_gpio_init();
-
-  lcd1602_init();
 
   dipsw_init();
   keypad_init();
@@ -224,18 +224,35 @@ void GROUP1_IRQHandler(void)
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This function controls motor operation and speed in a loop, 
+//  responding to keypad input and button presses. It manages 
+//  motor states (off, clockwise, counterclockwise) and updates 
+//  LED indicators until a specific button is pressed, after which 
+//  it disables the motor, LEDs, and clears the LCD.
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab9_part1() 
 {
   lcd_set_ddram_addr(LCD_LINE1_ADDR + LCD_CHAR_POSITION_3);
   lcd_write_string(PART1_STRING_SPEED);
 
-  led_on(1);
-  led_off(2);
+  led_on(LED_BAR_LD1_IDX);
+  led_off(LED_BAR_LD2_IDX);
 
   MOTOR_STATE state = MOTOR_OFF2;
-  while (!g_PB1_Pressed) 
+  while (!g_PB1_Pressed)
   {
-    if(keypad_scan() != 0x10)
+    if(keypad_scan() != PART1_KEYPAD_NO_KEY)
     {
       uint8_t speed = keypad_scan() * PART1_NIBBLE_TO_PERCENT;
 
@@ -246,7 +263,7 @@ void run_lab9_part1()
       lcd_write_char(PART1_CHAR_PERCENT);
 
       wait_no_key_pressed();
-    }
+    } /* if */
 
     if (g_PB2_Pressed) {
       switch (state) {
@@ -256,8 +273,8 @@ void run_lab9_part1()
           break;
         case MOTOR_CW:
           motor0_pwm_enable();
-          led_on(1);
-          led_off(2);
+          led_on(LED_BAR_LD1_IDX);
+          led_off(LED_BAR_LD2_IDX);
           state = MOTOR_OFF2;
           break;
         case MOTOR_OFF2:
@@ -266,20 +283,20 @@ void run_lab9_part1()
           break;
         case MOTOR_CCW:
           motor0_pwm_enable();
-          led_on(2);
-          led_off(1);
+          led_on(LED_BAR_LD2_IDX);
+          led_off(LED_BAR_LD1_IDX);
           state = MOTOR_OFF1;
           break;
-      }
+      } /* switch */
 
       msec_delay(PART1_DELAY);
       g_PB2_Pressed = false;
-    }
-  }
+    } /* if */
+  } /* while */
 
   motor0_pwm_disable();
   led_disable();
 
   lcd_clear();
   lcd_write_string(PART1_STRING_END);
-}
+} /* run_lab9_part1 */
