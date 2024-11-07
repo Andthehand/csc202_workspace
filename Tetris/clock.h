@@ -56,8 +56,4 @@ uint32_t get_bus_clock_freq(void);
 void clock_delay(uint32_t cycles) __attribute__((noinline));
 void msec_delay(uint32_t ms);
 
-void sys_tick_init(uint32_t period);
-void sys_tick_disable(void);
-void sys_tick_reset(void);
-
 #endif /* __CLOCK_H__ */

@@ -51,67 +51,6 @@
 
 
 // Define a structure to hold different data types
-int melody[] = {
-  NOTE_E5, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_C5, NOTE_B4,
-  NOTE_A4, NOTE_A4, NOTE_C5, NOTE_E5, NOTE_D5, NOTE_C5,
-  NOTE_B4, NOTE_C5, NOTE_D5, NOTE_E5,
-  NOTE_C5, NOTE_A4, NOTE_A4, NOTE_A4, NOTE_B4, NOTE_C5,
-  
-  NOTE_D5, NOTE_F5, NOTE_A5, NOTE_G5, NOTE_F5,
-  NOTE_E5, NOTE_C5, NOTE_E5, NOTE_D5, NOTE_C5,
-  NOTE_B4, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_E5,
-  NOTE_C5, NOTE_A4, NOTE_A4,
-  
-  NOTE_E5, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_C5, NOTE_B4,
-  NOTE_A4, NOTE_A4, NOTE_C5, NOTE_E5, NOTE_D5, NOTE_C5,
-  NOTE_B4, NOTE_C5, NOTE_D5, NOTE_E5,
-  NOTE_C5, NOTE_A4, NOTE_A4, NOTE_A4, NOTE_B4, NOTE_C5,
-  
-  NOTE_D5, NOTE_F5, NOTE_A5, NOTE_G5, NOTE_F5,
-  NOTE_E5, NOTE_C5, NOTE_E5, NOTE_D5, NOTE_C5,
-  NOTE_B4, NOTE_B4, NOTE_C5, NOTE_D5, NOTE_E5,
-  NOTE_C5, NOTE_A4, NOTE_A4,
-  
-  NOTE_E5, NOTE_C5,
-  NOTE_D5, NOTE_B4,
-  NOTE_C5, NOTE_A4,
-  NOTE_GS4, NOTE_B4,
-  NOTE_E5, NOTE_C5,
-  NOTE_D5, NOTE_B4,
-  NOTE_C5, NOTE_E5, NOTE_A5,
-  NOTE_GS5
-};
-
-int durations[] = {
-  4, 8, 8, 4, 8, 8,
-  4, 8, 8, 4, 8, 8,
-  4, 8, 4, 4,
-  4, 4, 8, 4, 8, 8,
-  
-  4, 8, 4, 8, 8,
-  4, 8, 4, 8, 8,
-  4, 8, 8, 4, 4,
-  4, 4, 4,
-  
-  4, 8, 8, 4, 8, 8,
-  4, 8, 8, 4, 8, 8,
-  4, 8, 4, 4,
-  4, 4, 8, 4, 8, 8,
-  
-  4, 8, 4, 8, 8,
-  4, 8, 4, 8, 8,
-  4, 8, 8, 4, 4,
-  4, 4, 4,
-  
-  2, 2,
-  2, 2,
-  2, 2,
-  2, 4,
-  2, 2,
-  2, 2,
-  4, 4, 2,
-  2
-};
 
 int main(void){
     clock_init_40mhz();
@@ -119,6 +58,7 @@ int main(void){
 
     ST7735S_init();
     joystick_init();
+    // buzzer_init();
 
     init_events();
 
