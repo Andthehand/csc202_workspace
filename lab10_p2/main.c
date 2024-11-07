@@ -34,12 +34,12 @@
 //-----------------------------------------------------------------------------
 // Define function prototypes used by the program
 //-----------------------------------------------------------------------------
-void msp_printf(char* buffer, unsigned int value);
+void msp_printf(char* string);
 
 void run_lab10_part2();
 
 void flash_leds();
-void inc_seg7();
+void inc_seg7(bool incrament);
 void display_temp();
 
 //-----------------------------------------------------------------------------
@@ -53,7 +53,8 @@ void display_temp();
 #define PART2_STRING_ENTER_SEL                         "Enter your selection: "
 
 #define PART2_STRING_THANKS               "Thank you for using the program\r\n"
-#define PART2_STRING_NOT_A_NUM   "ERROR: Your input \'%c\' is not a number\r\n"
+#define PART2_STRING_NOT_VALID             "ERROR: Your input is not valid\r\n"
+#define PART2_STRING_NEW_LINE                                            "\r\n"
 
 #define PART2_STRING_TEMP                                             "Temp = "
 #define PART2_STRING_END                                      "Program Stopped"
@@ -77,6 +78,7 @@ void display_temp();
 int main(void)
 {
   clock_init_40mhz();
+  launchpad_gpio_init();
   UART_init(115200);
 
   led_init();
@@ -84,6 +86,7 @@ int main(void)
 
   ADC0_init(ADC12_MEMCTL_VRSEL_VDDA_VSSA);
 
+  I2C_init();
   lcd1602_init();
 
   run_lab10_part2();
@@ -108,52 +111,49 @@ int main(void)
 //  none
 // 
 //-----------------------------------------------------------------------------
-void msp_printf(char* buffer, unsigned int value) {
-  unsigned int i = 0;
-  unsigned int len = 0;
-  char string[80];
-
-  len = sprintf(string, buffer, value);
-
-  // Sends the string one bit at a time through UART
-  for(i = 0; i < len; i++)
+void msp_printf(char* string) {
+  while (*string != '\0')
   {
-    UART_out_char(string[i]);
-  } /* for */
-
+    UART_out_char(*string++);
+  } /* while */
 } /* msp _printf */
 
 void run_lab10_part2()
 {
   leds_on(0xFF);
-  seg7_on(0, SEG7_DIG0_ENABLE_IDX);
+  seg7_hex(0, SEG7_DIG0_ENABLE_IDX);
 
   bool finished = false;
   while (!finished) {
-    msp_printf(PART2_STRING_MENU, 0);
-    msp_printf(PART2_STRING_MENU_1, 0);
-    msp_printf(PART2_STRING_MENU_2, 0);
-    msp_printf(PART2_STRING_MENU_3, 0);
-    msp_printf(PART2_STRING_MENU_4, 0);
-    msp_printf(PART2_STRING_ENTER_SEL, 0);
+    msp_printf(PART2_STRING_MENU);
+    msp_printf(PART2_STRING_MENU_1);
+    msp_printf(PART2_STRING_MENU_2);
+    msp_printf(PART2_STRING_MENU_3);
+    msp_printf(PART2_STRING_MENU_4);
+    msp_printf(PART2_STRING_ENTER_SEL);
 
     char input = UART_in_char();
+    UART_out_char(input);
+    msp_printf(PART2_STRING_NEW_LINE);
+    msp_printf(PART2_STRING_NEW_LINE);
     switch (input) {
       case '1':
-        inc_seg7();
+        inc_seg7(true);
         break;
       case '2':
         display_temp();
         break;
       case '3':
+        seg7_off();
         flash_leds();
+        inc_seg7(false);
         break;
       case '4':
-        msp_printf(PART2_STRING_THANKS, 0);
+        msp_printf(PART2_STRING_THANKS);
         finished = true;
         break;
       default:
-        msp_printf(PART2_STRING_NOT_A_NUM, input);
+        msp_printf(PART2_STRING_NOT_VALID);
         break;
     } 
   }
@@ -167,6 +167,8 @@ void run_lab10_part2()
 
 void flash_leds()
 {
+  leds_on(0xFF);
+
   for(uint8_t i = 0; i < PART2_BLINK_COUNT; i++)
   {
     led_enable();
@@ -176,14 +178,14 @@ void flash_leds()
   }
 }
 
-void inc_seg7()
+void inc_seg7(bool incrament)
 {
   static uint8_t count = 0;
 
-  if(++count > 9)
+  if(incrament && ++count > 9)
     count = 0;
   
-  seg7_on(++count, SEG7_DIG0_ENABLE_IDX);
+  seg7_hex(count, SEG7_DIG0_ENABLE_IDX);
 }
 
 void display_temp()

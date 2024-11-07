@@ -281,7 +281,7 @@ void lcd_write_string(const char *string)
     // for each character in string, write it to the LCD module
     while (*string != '\0')
     {
-        lcd_write_char(*string++);
+      lcd_write_char(*string++);
     } /* while */
 
 } /* lcd_write_string */

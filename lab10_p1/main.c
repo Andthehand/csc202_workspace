@@ -53,8 +53,10 @@ void run_lab10_part1();
 int main(void)
 {
   clock_init_40mhz();
+  launchpad_gpio_init();
   UART_init(115200);
 
+  I2C_init();
   lcd1602_init();
 
   run_lab10_part1();
@@ -74,14 +76,21 @@ void run_lab10_part1()
     input = UART_in_char();
     UART_out_char(input);
 
-    if(index < PART1_NAME_LENGTH) {
+    if(input == '\b')
+    {
+      if(index > 0)
+      {
+        index--;
+      }
+    }
+    else if(index < PART1_NAME_LENGTH && index <= PART1_NAME_LENGTH) {
       name[index] = input;
       index++;
     }
   }
   while(input != '\r');
 
-  name[PART1_NAME_LENGTH - 1] = '\0';
+  name[index - 1] = '\0';
 
   lcd_set_ddram_addr(LCD_LINE1_ADDR);
   lcd_write_string(PART1_STRING_NAME);
