@@ -3,14 +3,14 @@
 //*****************************************************************************
 //  DESIGNER NAME:  Andrew DeFord
 //
-//       LAB NAME:  TBD
+//       LAB NAME:  Lab 10
 //
-//      FILE NAME:  main.c
+//      FILE NAME:  main_part1.c
 //
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    This program serves as a ... 
+//    This program serves as a way to use UART out
 //
 //*****************************************************************************
 //*****************************************************************************
@@ -40,6 +40,9 @@ void run_lab10_part1();
 //-----------------------------------------------------------------------------
 #define PART1_STRING_NAME                                               "Name:"
 #define PART1_STRING_END                                      "Program Stopped"
+#define PART1_CHAR_RETURN                                                  '\r'
+#define PART1_CHAR_BACKSPACE                                               '\b'
+#define PART1_CHAR_END_STRING                                              '\0'
 #define PART1_NAME_LENGTH                                                    12
 
 //-----------------------------------------------------------------------------
@@ -66,6 +69,21 @@ int main(void)
 
 } /* main */
 
+
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  This function captures a user's name input via UART, character by character,
+//  and displays it on an LCD screen. 
+//
+// INPUT PARAMETERS:
+//    none
+//
+// OUTPUT PARAMETERS:
+//    none
+//
+// RETURN:
+//    none
+// -----------------------------------------------------------------------------
 void run_lab10_part1()
 {
   char input;
@@ -76,7 +94,7 @@ void run_lab10_part1()
     input = UART_in_char();
     UART_out_char(input);
 
-    if(input == '\b')
+    if(input == PART1_CHAR_BACKSPACE)
     {
       if(index > 0)
       {
@@ -88,9 +106,9 @@ void run_lab10_part1()
       index++;
     }
   }
-  while(input != '\r');
+  while(input != PART1_CHAR_RETURN);
 
-  name[index - 1] = '\0';
+  name[index - 1] = PART1_CHAR_END_STRING;
 
   lcd_set_ddram_addr(LCD_LINE1_ADDR);
   lcd_write_string(PART1_STRING_NAME);
