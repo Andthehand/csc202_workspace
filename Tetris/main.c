@@ -64,8 +64,8 @@ int main(void){
 
     //Game loop
     while (true) {
-        draw_rectangle(0, 0, 50, 50, RGB_to_color(0xFF, 0x00, 0x00));
-        draw_rectangle(55, 0, 50, 50, RGB_to_color(0x00, 0xFF, 0x00)); 
+        draw_rectangle(1, 1, 50, 50, RGB_to_color(0xFF, 0x00, 0x00));
+        draw_rectangle(55, 1, 50, 50, RGB_to_color(0x00, 0xFF, 0x00)); 
     }
 
     // Endless loop to prevent program from ending

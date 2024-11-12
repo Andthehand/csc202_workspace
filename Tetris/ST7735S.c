@@ -174,15 +174,15 @@ void ST7735S_set_addr(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
   ST7735S_write_command(LCD_CASET_CMD);
   ST7735S_write_data(0x00);
-  ST7735S_write_data(0x00 + x0);
+  ST7735S_write_data(0x02 + x0);
   ST7735S_write_data(0x00);
   ST7735S_write_data(0x01 + x1);
 
   ST7735S_write_command(LCD_RASET_CMD);
   ST7735S_write_data(0x00);
-  ST7735S_write_data(0x00 + y0);
+  ST7735S_write_data(0x03 + y0);
   ST7735S_write_data(0x00);
-  ST7735S_write_data(0x01 + y1);
+  ST7735S_write_data(0x02 + y1);
 }
 
 color565_t RGB_to_color(uint8_t r, uint8_t g, uint8_t b) 

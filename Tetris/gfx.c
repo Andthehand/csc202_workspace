@@ -30,9 +30,9 @@
 
 void draw_rectangle(uint8_t x, uint8_t y, uint8_t width, uint8_t height, color565_t color)
 {
-  ST7735S_set_addr(x, y, x + width, y + width);
+  ST7735S_set_addr(x, y, x + width, y + height);
   ST7735S_write_command(LCD_RAMWR_CMD);
-  for(uint16_t i = 0; i < width * height; i++)
+  for(uint16_t i = 0; i < (width * height); i++)
   {
     ST7735S_write_color(color);
   }
