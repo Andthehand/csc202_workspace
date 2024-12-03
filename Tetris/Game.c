@@ -69,7 +69,6 @@ typedef enum {
 //-----------------------------------------------------------------------------
 // Define function prototypes used by the program
 //-----------------------------------------------------------------------------
-bool shape_bounds(const Shape& shape, Vector2 pos);
 void update_dirty_grid(CheckType dirty_grid[TETRIS_WIDTH][TETRIS_HEIGHT], 
                         Vector2 previous_pos, Vector2 current_pos, Shape block);
 void render_screen(CheckType dirty_grid[TETRIS_WIDTH][TETRIS_HEIGHT], 
@@ -164,21 +163,6 @@ void game_init(void)
     }
 
     msec_delay(100);
-  }
-}
-
-bool shape_bounds(const Shape& shape, Vector2 pos)
-{
-  for(uint8_t y = 0; y < 4; y++)
-  {
-    for(uint8_t x = 0; x < 2; x++)
-    {
-      if(shape.array[(y * 2) + x] != 0 && 
-          (pos.x + x < TETRIS_WIDTH || pos.y < TETRIS_HEIGHT))
-      {
-        dirty_grid[x + previous_pos.x][y + previous_pos.y] = GRID;
-      }
-    }
   }
 }
 
