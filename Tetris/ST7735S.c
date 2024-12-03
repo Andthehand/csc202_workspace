@@ -55,7 +55,7 @@ void send_init_commands(void)
   ST7735S_write_command(LCD_RAMWR_CMD);
   for (uint16_t i = 0; i < (LCD_WIDTH * LCD_HEIGHT); i++)
   {
-    ST7735S_write_color(RGB_to_color(0xFF, 0xFF, 0xFF));
+    ST7735S_write_color(RGB_to_color(0x00, 0x00, 0x00));
   }
 
   ST7735S_write_command(LCD_IDMOFF_CMD);

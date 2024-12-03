@@ -18,7 +18,7 @@
 //******************************************************************************
 
 #ifndef __ADC_H__
-#define __ADC_H__
+#define __GAME_H__
 
 //-----------------------------------------------------------------------------
 // Load standard C include files
@@ -28,21 +28,10 @@
 //-----------------------------------------------------------------------------
 // Loads MSP launchpad board support macros and definitions
 //-----------------------------------------------------------------------------
-#define PB1_PORT                                                    (GPIO_PORTA)
-#define PB1_MASK                                                       (1 << 11)
-#define PB1_IOMUX                                                (IOMUX_PINCM22)
-#define PB2_PORT                                                    (GPIO_PORTA)
-#define PB2_MASK                                                       (1 << 12)
-#define PB2_IOMUX                                                (IOMUX_PINCM34)
-
-#define PINCM_GPIO_PIN_FUNC                              ((uint32_t)0x00000001U)
 
 // ----------------------------------------------------------------------------
 // Prototype for support functions
 // ----------------------------------------------------------------------------
-void init_events(void);
+void game_init(void);
 
-bool is_pb1_down(bool handled);
-bool is_pb2_down(bool handled);
-
-#endif /* __ADC_H__ */
+#endif /* __GAME_ */

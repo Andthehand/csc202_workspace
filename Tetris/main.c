@@ -30,7 +30,7 @@
 #include "Events.h"
 #include "gfx.h"
 #include "Buzzer.h"
-#include "pitches.h"
+#include "Game.h"
 
 #include "LaunchPad.h"
 #include "clock.h"
@@ -43,14 +43,13 @@
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
 
-
 //-----------------------------------------------------------------------------
 // Define global variables and structures here.
 // NOTE: when possible avoid using global variables
 //-----------------------------------------------------------------------------
 
-
 // Define a structure to hold different data types
+
 
 int main(void){
     clock_init_40mhz();
@@ -62,13 +61,8 @@ int main(void){
 
     init_events();
 
-    //Game loop
-    while (true) {
-        draw_rectangle(1, 1, 50, 50, RGB_to_color(0xFF, 0x00, 0x00));
-        draw_rectangle(55, 1, 50, 50, RGB_to_color(0x00, 0xFF, 0x00)); 
-    }
+    game_init();
 
     // Endless loop to prevent program from ending
     while (1);
-
 } /* main */
