@@ -34,18 +34,13 @@
 // Define global variables and structures here.
 // NOTE: when possible avoid using global variables
 //-----------------------------------------------------------------------------
-bool g_PB1_Pressed = false;
 bool g_PB2_Pressed = false;
 
-void init_PB1_irq()
+void init_PB1()
 {
   uint32_t gpio_pincm = IOMUX_PINCM_INENA_ENABLE | IOMUX_PINCM_PC_CONNECTED |
                     PINCM_GPIO_PIN_FUNC | IOMUX_PINCM_INV_ENABLE;
   IOMUX->SECCFG.PINCM[PB1_IOMUX] = gpio_pincm;
-
-  GPIOA->POLARITY15_0 |= GPIO_POLARITY15_0_DIO11_RISE;
-  GPIOA->CPU_INT.ICLR &= ~GPIO_CPU_INT_ICLR_DIO11_CLR;
-  GPIOA->CPU_INT.IMASK |= GPIO_CPU_INT_IMASK_DIO11_SET;
 }
 
 void init_PB2_irq()
@@ -61,7 +56,7 @@ void init_PB2_irq()
 
 void init_events(void)
 {
-  init_PB1_irq();
+  init_PB1();
   init_PB2_irq();
 
   NVIC_SetPriority(GPIOA_INT_IRQn, 2);
@@ -96,41 +91,26 @@ void GROUP1_IRQHandler(void)
       case (CPUSS_INT_GROUP_IIDX_STAT_INT0): //GPIOA
         gpio_mis = GPIOA->CPU_INT.MIS;
         
-        if((gpio_mis & GPIO_CPU_INT_MIS_DIO11_MASK) == GPIO_CPU_INT_MIS_DIO11_SET)
-        {
-          g_PB1_Pressed = true;
-          GPIOA->CPU_INT.ICLR = GPIO_CPU_INT_ICLR_DIO11_CLR;
-        } /* if */
-        else if ((gpio_mis & GPIO_CPU_INT_MIS_DIO12_MASK) == GPIO_CPU_INT_MIS_DIO12_SET) 
+        if ((gpio_mis & GPIO_CPU_INT_MIS_DIO12_MASK) == GPIO_CPU_INT_MIS_DIO12_SET) 
         {
           g_PB2_Pressed = true;
           GPIOA->CPU_INT.ICLR = GPIO_CPU_INT_ICLR_DIO12_CLR;
-        }
+        } /* if */
         break;
     } /* switch */
   } while(group_iidx_status != 0);
 } /* GROUP1_IRQHandler */
 
-bool is_pb1_down(bool handled) 
+bool is_pb1_down() 
 {
-  bool temp = g_PB1_Pressed;
-
-  if(handled && g_PB1_Pressed) 
-  {
-    g_PB1_Pressed = false;
-  }
-
-  return temp;
+  return GPIOA->DIN31_0 & PB1_MASK;
 }
 
-bool is_pb2_down(bool handled) 
+bool has_pb2_pressed() 
 {
   bool temp = g_PB2_Pressed;
+  g_PB2_Pressed = false;
 
-  if(handled && g_PB2_Pressed) 
-  {
-    g_PB2_Pressed = false;
-  }
 
   return temp;
 }

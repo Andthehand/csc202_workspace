@@ -33,5 +33,6 @@
 // Prototype for support functions
 // ----------------------------------------------------------------------------
 void game_init(void);
+void game_loop(void);
 
 #endif /* __GAME_ */

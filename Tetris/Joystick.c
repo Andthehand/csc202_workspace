@@ -262,9 +262,9 @@ uint32_t ADC1_in(uint8_t channel)
 
 } /* ADC0_in */
 
-joystick_pos read_joystick() 
+Joystick_pos read_joystick() 
 {
-  joystick_pos pos;
+  Joystick_pos pos;
   pos.x_pos = ADC1_in(JOYSTICK_X_AXIS_CHANNEL);
   pos.y_pos = ADC0_in(JOYSTICK_Y_AXIS_CHANNEL);
 

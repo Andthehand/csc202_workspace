@@ -52,17 +52,18 @@
 
 
 int main(void){
-    clock_init_40mhz();
-    launchpad_gpio_init();
+  clock_init_40mhz();
+  launchpad_gpio_init();
 
-    ST7735S_init();
-    joystick_init();
-    // buzzer_init();
+  ST7735S_init();
+  joystick_init();
+  // buzzer_init();
 
-    init_events();
+  init_events();
 
-    game_init();
+  game_init();
+  game_loop();
 
-    // Endless loop to prevent program from ending
-    while (1);
+  // Endless loop to prevent program from ending
+  while (1);
 } /* main */

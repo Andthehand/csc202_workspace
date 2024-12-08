@@ -78,7 +78,7 @@
 typedef struct {
   uint16_t x_pos;
   uint16_t y_pos;
-} joystick_pos;
+} Joystick_pos;
 
 // ----------------------------------------------------------------------------
 // Prototype for support functions
@@ -90,6 +90,6 @@ void ADC1_init();
 uint32_t ADC0_in(uint8_t channel);
 uint32_t ADC1_in(uint8_t channel);
 
-joystick_pos read_joystick();
+Joystick_pos read_joystick();
 
 #endif /* __ADC_H__ */

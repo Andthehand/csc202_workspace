@@ -25,10 +25,12 @@
 // Loads MSP launchpad board support macros and definitions
 //-----------------------------------------------------------------------------
 #include <ti/devices/msp/msp.h>
-#include "clock.h"
 #include "ti/devices/msp/peripherals/hw_iomux.h"
 #include "ti/devices/msp/peripherals/hw_spi.h"
 #include "ST7735S.h"
+#include "math.h"
+
+#include "clock.h"
 
 void send_init_commands(void)
 {
@@ -53,9 +55,11 @@ void send_init_commands(void)
 
   ST7735S_set_addr(0, 0, LCD_WIDTH, LCD_HEIGHT);
   ST7735S_write_command(LCD_RAMWR_CMD);
+
+  color565_t background_color = RGB_to_color(0x00, 0x00, 0x00);
   for (uint16_t i = 0; i < (LCD_WIDTH * LCD_HEIGHT); i++)
   {
-    ST7735S_write_color(RGB_to_color(0x00, 0x00, 0x00));
+    ST7735S_write_color(background_color);
   }
 
   ST7735S_write_command(LCD_IDMOFF_CMD);
@@ -187,5 +191,7 @@ void ST7735S_set_addr(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 
 color565_t RGB_to_color(uint8_t r, uint8_t g, uint8_t b) 
 {
-  return (color565_t){ .r = r, .g = g, .b = b};
+  return (color565_t){ .r = ((float)r / 255.0) * (pow(2, 5) - 1), 
+                       .g = ((float)g / 255.0) * (pow(2, 6) - 1), 
+                       .b = ((float)b / 255.0) * (pow(2, 5) - 1)};
 }

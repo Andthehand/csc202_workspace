@@ -42,7 +42,7 @@
 // ----------------------------------------------------------------------------
 void init_events(void);
 
-bool is_pb1_down(bool handled);
-bool is_pb2_down(bool handled);
+bool is_pb1_down();
+bool has_pb2_pressed();
 
 #endif /* __ADC_H__ */
