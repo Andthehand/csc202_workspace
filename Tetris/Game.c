@@ -59,9 +59,16 @@ typedef struct {
   uint8_t y;
 } Vector2;
 
+typedef enum {
+  BLANK = 0,
+  RED = 1,
+  CYAN = 2,
+  ALSO_CYAN = 3
+} BLOCK_COLOR_INDEX;
+
 typedef struct {
   int8_t blocks[4][4];
-  uint8_t color;
+  BLOCK_COLOR_INDEX color;
   uint8_t size;
 } Shape;
 
@@ -83,6 +90,7 @@ bool move(int8_t x_step, int8_t y_step);
 void update_dirty_grid_move(Vector2 previous_pos, Vector2 current_pos);
 void update_dirty_grid_rotate(const Shape* previous_shape, const Shape* current_shape);
 void update_dirty_grid_full_block_grid();
+void render_game_over();
 void render_screen();
 
 //-----------------------------------------------------------------------------
@@ -93,28 +101,61 @@ uint8_t block_grid[TETRIS_WIDTH][TETRIS_HEIGHT] = {{0}};
 CheckType dirty_grid[TETRIS_WIDTH][TETRIS_HEIGHT];
 
 const Shape SHAPES[] = {
-  {{ {1, 1, 1, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0} }, 1, 4}, // I
-  {{ {1, 1}, {1, 1} }, 2, 2},                                         // O
-  {{ {0, 1, 1}, {1, 1, 0}, {0, 0, 0} }, 0, 3},                        // S
-  {{ {1, 1, 0}, {0, 1, 1}, {0, 0, 0} }, 0, 3},                        // Z
-  {{ {1, 0, 0}, {1, 1, 1}, {0, 0, 0} }, 0, 3},                        // L
-  {{ {0, 0, 1}, {1, 1, 1}, {0, 0, 0} }, 3, 3},                        // J
-  {{ {0, 1, 0}, {1, 1, 1}, {0, 0, 0} }, 0, 3}                         // T
+  {{ {1, 1, 1, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0} }, RED, 4}, // I
+  {{ {1, 1}, {1, 1} }, CYAN, 2},                                         // O
+  {{ {0, 1, 1}, {1, 1, 0}, {0, 0, 0} }, BLANK, 3},                        // S
+  {{ {1, 1, 0}, {0, 1, 1}, {0, 0, 0} }, BLANK, 3},                        // Z
+  {{ {1, 0, 0}, {1, 1, 1}, {0, 0, 0} }, BLANK, 3},                        // L
+  {{ {0, 0, 1}, {1, 1, 1}, {0, 0, 0} }, ALSO_CYAN, 3},                        // J
+  {{ {0, 1, 0}, {1, 1, 1}, {0, 0, 0} }, BLANK, 3}                         // T
 };
 
 Vector2 selected_block_pos = {0};
 Shape current_block;
 bool game_over = false;
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Initializes the game state, including setting up the dirty grid, 
+//  selecting the initial block, and positioning it at the starting location.
+//
+// INPUT PARAMETERS:
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
 void game_init(void)
 {
-  current_block = SHAPES[1];
-  
   memset(dirty_grid, UPDATE_GRID, sizeof(dirty_grid));
+
+  current_block = SHAPES[1];
+  // current_block = SHAPES[rand() % (sizeof(SHAPES) / sizeof(SHAPES[0]))];
+  selected_block_pos.x = (TETRIS_WIDTH - current_block.size) / 2;
+  selected_block_pos.y = 0;
 
   update_dirty_grid_move(selected_block_pos, selected_block_pos);
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  The main game loop responsible for rendering the screen, handling input,
+//  updating game logic, and managing the timing of block movement and placement.
+//
+// INPUT PARAMETERS:
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
 void game_loop(void)
 {
   uint32_t loop_count = 0;
@@ -136,15 +177,25 @@ void game_loop(void)
     msec_delay(TETRIS_LOOP_DELAY);
   }
 
-  memset(block_grid, 1, sizeof(block_grid));
-  for(uint8_t x = 0; x < TETRIS_HEIGHT; x++)
-  {
-    memset(dirty_grid[x], UPDATE_GRID, sizeof(dirty_grid[0]));
-    render_screen();
-    msec_delay(TETRIS_FILL_DELAY);
-  }
+  render_game_over();
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Handles user input from the joystick and push buttons to move, rotate, 
+//  or accelerate the current block in the Tetris game. Ensures movements 
+//  are valid and updates the game state accordingly.
+//
+// INPUT PARAMETERS:
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
 void input_handler() {
   static bool joystick_last_frame_moved = false;
 
@@ -191,6 +242,22 @@ void input_handler() {
   }
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Checks each row of the Tetris grid to determine if it is fully occupied.
+//  If a full row is found, it clears the row, shifts rows above it downward, 
+//  and updates the game state to reflect the changes.
+//
+// INPUT PARAMETERS:
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
 void clear_rows() {
   for (int y = 0; y < TETRIS_HEIGHT; y++) {
     bool full = true;
@@ -214,6 +281,23 @@ void clear_rows() {
   }
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Rotates the current Tetris block 90 degrees clockwise. If the rotated block 
+//  cannot be placed in its current position due to collisions, the rotation 
+//  is canceled, and the block remains in its original orientation.
+//
+// INPUT PARAMETERS:
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  Shape: The rotated block if the rotation is valid; otherwise, 
+//         the original block.
+// 
+//-----------------------------------------------------------------------------
 Shape rotate_shape() {
   Shape rotated = current_block;
   for (int y = 0; y < current_block.size; y++) {
@@ -232,6 +316,23 @@ Shape rotate_shape() {
   }
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Places the current Tetris block on the game grid, marking its cells as 
+//  occupied. Checks for and clears any completed rows, then spawns a new 
+//  block at the starting position. Ends the game if the new block cannot be 
+//  placed due to collisions.
+//
+// INPUT PARAMETERS:
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
 void place_shape() {
   for (int y = 0; y < current_block.size; y++) {
     for (int x = 0; x < current_block.size; x++) {
@@ -253,6 +354,24 @@ void place_shape() {
   }
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Checks if the current Tetris block can be moved by the specified 
+//  vertical (x_step) and horizontal (y_step) steps. This function verifies 
+//  that the block does not collide with walls or other placed blocks.
+//
+// INPUT PARAMETERS:
+//  x_step: The horizontal movement step (positive for down, negative for up).
+//  y_step: The vertical movement step (positive for right, negative for left).
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  0 if the movement is blocked by the walls or other blocks.
+//  1 if the block can move by the specified steps, 
+// 
+//-----------------------------------------------------------------------------
 bool can_move(int8_t x_step, int8_t y_step) {
   for (int8_t y = 0; y < current_block.size; y++) {
     for (int8_t x = 0; x < current_block.size; x++) {
@@ -271,6 +390,24 @@ bool can_move(int8_t x_step, int8_t y_step) {
   return true;
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Attempts to move the current Tetris block by the specified vertical (x_step) 
+//  and horizontal (y_step) steps. If the move is valid (no collisions), it 
+//  updates the block's position and the game state/render state.
+//
+// INPUT PARAMETERS:
+//  x_step: The horizontal movement step (positive for down, negative for up).
+//  y_step: The vertical movement step (positive for right, negative for left).
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  bool: Returns true if the block was successfully moved, 
+//        false if the move was blocked by walls or other blocks.
+// 
+//-----------------------------------------------------------------------------
 bool move(int8_t x_step, int8_t y_step)
 {
   bool movable = can_move(x_step, y_step);
@@ -287,6 +424,23 @@ bool move(int8_t x_step, int8_t y_step)
   return movable;
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Updates the dirty grid to reflect the movement of the current Tetris block. 
+//  It marks the previous position of the block for re-rendering and sets 
+//  the current position of the block as selected for rendering.
+//
+// INPUT PARAMETERS:
+//  previous_pos: The previous position of the Tetris block before the move.
+//  current_pos: The current position of the Tetris block after the move.
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
 void update_dirty_grid_move(Vector2 previous_pos, Vector2 current_pos) 
 {
   for(uint8_t y = 0; y < current_block.size; y++)
@@ -312,6 +466,23 @@ void update_dirty_grid_move(Vector2 previous_pos, Vector2 current_pos)
   }
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Updates the dirty grid to reflect the rotation of the current Tetris block. 
+//  It marks the previous shape's position for re-rendering and sets 
+//  the rotated shape's position as selected for rendering.
+//
+// INPUT PARAMETERS:
+//  previous_shape: A pointer to the block's shape before rotation.
+//  current_shape: A pointer to the block's shape after rotation.
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
 void update_dirty_grid_rotate(const Shape* previous_shape, const Shape* current_shape)
 {
   for(uint8_t y = 0; y < previous_shape->size; y++)
@@ -337,6 +508,21 @@ void update_dirty_grid_rotate(const Shape* previous_shape, const Shape* current_
   }
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Updates the dirty grid to reflect the presence of blocks in the main game grid.
+//  It marks all occupied positions in the block grid for re-rendering.
+//
+// INPUT PARAMETERS:
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
 void update_dirty_grid_full_block_grid()
 {
   for(uint8_t y = 0; y < TETRIS_HEIGHT; y++)
@@ -351,6 +537,51 @@ void update_dirty_grid_full_block_grid()
   }
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Renders the "game over" screen by filling the block grid with a specific 
+//  value to indicate the game has ended. It also updates the dirty grid and 
+//  re-renders the screen in a delayed manner to create a visual effect.
+//
+// INPUT PARAMETERS:
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
+
+void render_game_over() 
+{
+  memset(block_grid, 1, sizeof(block_grid));
+  for(uint8_t x = 0; x < TETRIS_HEIGHT; x++)
+  {
+    memset(dirty_grid[x], UPDATE_GRID, sizeof(dirty_grid[0]));
+    render_screen();
+    msec_delay(TETRIS_FILL_DELAY);
+  }
+}
+
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Renders the Tetris game screen by drawing rectangles for each block on the 
+//  grid. It updates the screen based on the dirty grid, which indicates which 
+//  blocks need to be re-rendered. Different colors are used for the game blocks 
+//  and the selected block.
+//
+// INPUT PARAMETERS:
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
 void render_screen()
 {
   const color565_t BLOCK_COLOR[] = {
