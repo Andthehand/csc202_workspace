@@ -13,6 +13,8 @@
 //    of the Joystick. Currently in the Game of tetris I do not use the y pos or
 //    the button on the Joystick.
 //
+//    This was mostly taken from adc.h and adc.c
+//
 // NOTES:
 //    
 //

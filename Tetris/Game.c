@@ -345,6 +345,7 @@ void place_shape() {
     }
   }
   clear_rows();
+
   current_block = SHAPES[rand() % (sizeof(SHAPES) / sizeof(SHAPES[0]))];
   selected_block_pos.x = (TETRIS_WIDTH - current_block.size) / 2;
   selected_block_pos.y = 0;

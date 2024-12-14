@@ -5,12 +5,15 @@
 //
 //         VERSION:  0.1
 //
-//       FILE NAME:  ST7735S.c
+//       FILE NAME:  Buzzer.c
 //
 //-----------------------------------------------------------------------------
 // DESCRIPTION
 //    Initializes the pizeo buzzer to play music depending on the hertz using 
 //    PWM. The song currently configured is the main song of tetris.
+//
+//    This was made with the help of:
+//    https://www.reddit.com/r/arduino/comments/mqodmu/music_piezo_buzzer_box_question/
 //
 //-----------------------------------------------------------------------------
 // DISCLAIMER
