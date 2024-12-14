@@ -9,7 +9,8 @@
 //
 //-----------------------------------------------------------------------------
 // DESCRIPTION
-//    
+//    Initializes the pizeo buzzer to play music depending on the hertz using 
+//    PWM. The song currently configured is the main song of tetris.
 //
 //-----------------------------------------------------------------------------
 // DISCLAIMER
@@ -37,36 +38,36 @@
 #define WHOLE_NOTE (60000 * 4) / TEMPO
 #define REST 34464
 
-int melody[] = {
-  NOTE_E5, 4,  NOTE_B4,8,  NOTE_C5,8,  NOTE_D5,4,  NOTE_C5,8,  NOTE_B4,8,
-  NOTE_A4, 4,  NOTE_A4,8,  NOTE_C5,8,  NOTE_E5,4,  NOTE_D5,8,  NOTE_C5,8,
-  NOTE_B4, -4,  NOTE_C5,8,  NOTE_D5,4,  NOTE_E5,4,
-  NOTE_C5, 4,  NOTE_A4,4,  NOTE_A4,8,  NOTE_A4,4,  NOTE_B4,8,  NOTE_C5,8,
+const int melody[] = {
+  NOTE_E5,  4,  NOTE_B4, 8,  NOTE_C5, 8,  NOTE_D5, 4,  NOTE_C5, 8,  NOTE_B4, 8,
+  NOTE_A4,  4,  NOTE_A4, 8,  NOTE_C5, 8,  NOTE_E5, 4,  NOTE_D5, 8,  NOTE_C5, 8,
+  NOTE_B4, -4,  NOTE_C5, 8,  NOTE_D5, 4,  NOTE_E5, 4,
+  NOTE_C5,  4,  NOTE_A4, 4,  NOTE_A4, 8,  NOTE_A4, 4,  NOTE_B4, 8,  NOTE_C5, 8,
 
-  NOTE_D5, -4,  NOTE_F5,8,  NOTE_A5,4,  NOTE_G5,8,  NOTE_F5,8,
-  NOTE_E5, -4,  NOTE_C5,8,  NOTE_E5,4,  NOTE_D5,8,  NOTE_C5,8,
-  NOTE_B4, 4,  NOTE_B4,8,  NOTE_C5,8,  NOTE_D5,4,  NOTE_E5,4,
-  NOTE_C5, 4,  NOTE_A4,4,  NOTE_A4,4, REST, 4,
+  NOTE_D5, -4,  NOTE_F5, 8,  NOTE_A5, 4,  NOTE_G5, 8,  NOTE_F5, 8,
+  NOTE_E5, -4,  NOTE_C5, 8,  NOTE_E5, 4,  NOTE_D5, 8,  NOTE_C5, 8,
+  NOTE_B4,  4,  NOTE_B4, 8,  NOTE_C5, 8,  NOTE_D5, 4,  NOTE_E5, 4,
+  NOTE_C5,  4,  NOTE_A4, 4,  NOTE_A4, 4,  REST, 4,
 
-  NOTE_E5, 4,  NOTE_B4,8,  NOTE_C5,8,  NOTE_D5,4,  NOTE_C5,8,  NOTE_B4,8,
-  NOTE_A4, 4,  NOTE_A4,8,  NOTE_C5,8,  NOTE_E5,4,  NOTE_D5,8,  NOTE_C5,8,
-  NOTE_B4, -4,  NOTE_C5,8,  NOTE_D5,4,  NOTE_E5,4,
-  NOTE_C5, 4,  NOTE_A4,4,  NOTE_A4,8,  NOTE_A4,4,  NOTE_B4,8,  NOTE_C5,8,
+  NOTE_E5,  4,  NOTE_B4, 8,  NOTE_C5, 8,  NOTE_D5, 4,  NOTE_C5, 8,  NOTE_B4, 8,
+  NOTE_A4,  4,  NOTE_A4, 8,  NOTE_C5, 8,  NOTE_E5, 4,  NOTE_D5, 8,  NOTE_C5, 8,
+  NOTE_B4, -4,  NOTE_C5, 8,  NOTE_D5, 4,  NOTE_E5, 4,
+  NOTE_C5,  4,  NOTE_A4, 4,  NOTE_A4, 8,  NOTE_A4, 4,  NOTE_B4, 8,  NOTE_C5, 8,
 
-  NOTE_D5, -4,  NOTE_F5,8,  NOTE_A5,4,  NOTE_G5,8,  NOTE_F5,8,
-  NOTE_E5, -4,  NOTE_C5,8,  NOTE_E5,4,  NOTE_D5,8,  NOTE_C5,8,
-  NOTE_B4, 4,  NOTE_B4,8,  NOTE_C5,8,  NOTE_D5,4,  NOTE_E5,4,
-  NOTE_C5, 4,  NOTE_A4,4,  NOTE_A4,4, REST, 4,
+  NOTE_D5, -4,  NOTE_F5, 8,  NOTE_A5, 4,  NOTE_G5, 8,  NOTE_F5, 8,
+  NOTE_E5, -4,  NOTE_C5, 8,  NOTE_E5, 4,  NOTE_D5, 8,  NOTE_C5, 8,
+  NOTE_B4,  4,  NOTE_B4, 8,  NOTE_C5, 8,  NOTE_D5, 4,  NOTE_E5, 4,
+  NOTE_C5,  4,  NOTE_A4, 4,  NOTE_A4, 4,  REST,    4,
   
 
-  NOTE_E5,2,  NOTE_C5,2,
-  NOTE_D5,2,   NOTE_B4,2,
-  NOTE_C5,2,   NOTE_A4,2,
-  NOTE_GS4,2,  NOTE_B4,4,  REST,8, 
-  NOTE_E5,2,   NOTE_C5,2,
-  NOTE_D5,2,   NOTE_B4,2,
-  NOTE_C5,4,   NOTE_E5,4,  NOTE_A5,2,
-  NOTE_GS5,2,
+  NOTE_E5,  2,  NOTE_C5, 2,
+  NOTE_D5,  2,  NOTE_B4, 2,
+  NOTE_C5,  2,  NOTE_A4, 2,
+  NOTE_GS4, 2,  NOTE_B4, 4,  REST,    8, 
+  NOTE_E5,  2,  NOTE_C5, 2,
+  NOTE_D5,  2,  NOTE_B4, 2,
+  NOTE_C5,  4,  NOTE_E5, 4,  NOTE_A5, 2,
+  NOTE_GS5, 2,
 };
 
 //-----------------------------------------------------------------------------
@@ -169,6 +170,21 @@ void SysTick_Handler(void)
   }
 } /* SysTick_Handler */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Initializes the PWM functionality on the TIMA0 timer by configuring the 
+//  clock source, prescaler, compare values, and output actions. It sets the 
+//  output pin for PWM and sets the timer to operate in a continuous mode.
+//
+// INPUT PARAMETERS: 
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void pwm_init()
 {
   // Reset TIMA0
@@ -228,6 +244,21 @@ void pwm_init()
           GPTIMER_CCPD_C0CCP0_INPUT);
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Configures the TIMA0 timer to generate a PWM signal with a specified 
+//  frequency for controlling the buzzer tone. The frequency is calculated 
+//  based on a 20 kHz clock frequency.
+//
+// INPUT PARAMETERS: 
+//  frequency: The desired frequency for the buzzer tone in Hz.
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void buzzer_tone(uint16_t frequency)
 {
   // clock freq is 20khz so 20,000 / frequency = desired frequency
@@ -239,6 +270,21 @@ void buzzer_tone(uint16_t frequency)
   TIMA0->COUNTERREGS.CC_23[0] = GPTIMER_CC_23_CCVAL_MASK & threshold;
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Initializes the buzzer by configuring the IOMUX pin, enabling the GPIO 
+//  output, setting up PWM, and setting the initial tone. The system tick 
+//  timer is also initialized for periodic updates.
+//
+// INPUT PARAMETERS: 
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void buzzer_init(void) 
 {
   IOMUX->SECCFG.PINCM[BUZZER_IOMUX] = IOMUX_PINCM17_PF_TIMA0_CCP2 | 

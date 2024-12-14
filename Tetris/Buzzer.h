@@ -9,7 +9,8 @@
 //
 //-----------------------------------------------------------------------------
 // DESCRIPTION
-//    
+//    Initializes the pizeo buzzer to play music depending on the hertz using 
+//    PWM. The song currently configured is the main song of tetris.
 //
 //-----------------------------------------------------------------------------
 // DISCLAIMER

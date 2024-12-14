@@ -5,11 +5,12 @@
 //
 //         VERSION:  0.1
 //
-//       FILE NAME:  Event.h
+//       FILE NAME:  Game.h
 //
 //-----------------------------------------------------------------------------
 // DESCRIPTION
-//    
+//    This file is used as the main game logic for tetris using some outside
+//    helper function for input pulling and the such.
 //
 // NOTES:
 //    

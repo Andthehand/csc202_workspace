@@ -32,23 +32,38 @@
 
 #include "clock.h"
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Sends a sequence of initialization commands to configure the ST7735S
+//  display. This includes resetting the display, setting color format,
+//  orientation, and filling the screen with a default background color.
+//
+// INPUT PARAMETERS: 
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void send_init_commands(void)
 {
   //Pulse reset
   GPIOB->DOUT31_0 &= (~ST7735S_RESET_MASK);
-  msec_delay(50);
+  msec_delay(STARTUP_DELAY);
   GPIOB->DOUT31_0 |= ST7735S_RESET_MASK;
-  msec_delay(150);
+  msec_delay(STARTUP_DELAY);
 
   ST7735S_write_command(LCD_SWRESET_CMD);
-  msec_delay(200);
+  msec_delay(STARTUP_DELAY);
 
   ST7735S_write_command(LCD_SLPOUT_CMD);
-  msec_delay(200);
+  msec_delay(STARTUP_DELAY);
 
   ST7735S_write_command(LCD_COLMOD_CMD);
   ST7735S_write_data(LCD_IFPF_16bit);
-  msec_delay(10);
+  msec_delay(STARTUP_DELAY);
 
   ST7735S_write_command(LCD_MADCTL_CMD);
   ST7735S_write_data(LCD_MADCTL_MY_MASK | LCD_MADCTL_MX_MASK);
@@ -66,12 +81,27 @@ void send_init_commands(void)
   ST7735S_write_command(LCD_NORON_CMD);
 
   ST7735S_write_command(LCD_DISPON_CMD);
-  msec_delay(500);
+  msec_delay(STARTUP_LAST_DELAY);
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Initializes the ST7735S display controller and configures the SPI1 module
+//  for communication. Sets up GPIO pins for reset and register select, and
+//  sends initialization commands to the display.
+//
+// INPUT PARAMETERS: 
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void ST7735S_init(void)
 {
-    // Reset SPI1
+  // Reset SPI1
   SPI1->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
 					    GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
 					    GPTIMER_RSTCTL_RESETASSERT_ASSERT);
@@ -101,26 +131,11 @@ void ST7735S_init(void)
   // Set clock division
   SPI1->CLKDIV = SPI_CLKDIV_RATIO_DIV_BY_1;
 
-  #define PD0_CPUCLK_CLKDIV   2     // PD0 BUSCLK is half of CPUCLK
-  #define PD1_CPUCLK_CLKDIV   1     // PD1 BUSCLK is same as CPUCLK
-
   // Both SPI modules are on PD1 
-  uint32_t bus_clock = get_bus_clock_freq() / PD1_CPUCLK_CLKDIV;
+  uint32_t bus_clock = get_bus_clock_freq();
 
   // Set clock prescaler to get final SPI clock frequency
-  // SPIClk = (BusClock / (CLKDIV * (SCR+1)*2) = 40MHz/(8 * (1+1) * 2) = 1.25MHz
-  if (bus_clock == 16E6)
-  {
-    SPI1->CLKCTL = SPI_CLKCTL_SCR_MINIMUM;
-  } /* if */
-  else if (bus_clock == 40E6)
-  {
-    SPI1->CLKCTL = 1;
-  } /* else if */
-  else 
-  {
-    SPI1->CLKCTL = 2;
-  } /* else */
+  SPI1->CLKCTL = SPI_CLKCTL_SCR_MINIMUM;
 
   // Configure SPI control register 0
   SPI1->CTL0 = (SPI_CTL0_CSCLR_DISABLE | SPI_CTL0_CSSEL_CSSEL_0 | 
@@ -149,6 +164,20 @@ void ST7735S_init(void)
   send_init_commands();
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Sends an 8-bit command to the ST7735S display via SPI. Ensures the SPI
+//  interface is not busy before and after the command is sent.
+//
+// INPUT PARAMETERS: 
+//  data: The 8-bit command to be written to the display.
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void ST7735S_write_command(uint8_t data)
 {
   while((SPI1->STAT & SPI_STAT_BUSY_MASK) == SPI_STAT_BUSY_ACTIVE); 
@@ -160,6 +189,20 @@ void ST7735S_write_command(uint8_t data)
   GPIOA->DOUT31_0 |= ST7735S_REG_SEL_MASK;
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Writes an 8-bit data value to the ST7735S display via SPI. Ensures the TX
+//  FIFO is not full before writing to avoid data loss.
+//
+// INPUT PARAMETERS: 
+//  data: The 8-bit data value to be written to the display.
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void ST7735S_write_data(uint8_t data)
 {
   // Wait here until TX FIFO is not full
@@ -168,30 +211,105 @@ void ST7735S_write_data(uint8_t data)
   SPI1->TXDATA = data;
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Writes a 16-bit RGB565 color value to the ST7735S display.
+//
+// INPUT PARAMETERS: 
+//  color: A color565_t structure containing the 16-bit RGB565 color value
+//         to be written.
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void ST7735S_write_color(color565_t color)
 {
   ST7735S_write_data(color.packet[1]);
   ST7735S_write_data(color.packet[0]);
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Sets the address window for pixel updates on the ST7735S display. This 
+//  specifies a rectangular area where subsequent pixel data will be written.
+//
+// INPUT PARAMETERS: 
+//  x0: The starting x-coordinate of the address window.
+//  y0: The starting y-coordinate of the address window.
+//  x1: The ending x-coordinate of the address window.
+//  y1: The ending y-coordinate of the address window.
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void ST7735S_set_addr(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) 
 {
   ST7735S_write_command(LCD_CASET_CMD);
   ST7735S_write_data(0x00);
-  ST7735S_write_data(0x02 + x0);
+  ST7735S_write_data(LCD_XS_OFFSET + x0);
   ST7735S_write_data(0x00);
-  ST7735S_write_data(0x01 + x1);
+  ST7735S_write_data(LCD_XE_OFFSET + x1);
 
   ST7735S_write_command(LCD_RASET_CMD);
   ST7735S_write_data(0x00);
-  ST7735S_write_data(0x03 + y0);
+  ST7735S_write_data(LCD_YS_OFFSET + y0);
   ST7735S_write_data(0x00);
-  ST7735S_write_data(0x02 + y1);
+  ST7735S_write_data(LCD_YE_OFFSET + y1);
 }
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Converts 8-bit RGB color values to a 16-bit RGB565 format.
+//
+// INPUT PARAMETERS: 
+//  r: The red color component (0-255).
+//  g: The green color component (0-255).
+//  b: The blue color component (0-255).
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  A color565_t structure containing the 16-bit RGB565 color representation.
+//-----------------------------------------------------------------------------
 color565_t RGB_to_color(uint8_t r, uint8_t g, uint8_t b) 
 {
-  return (color565_t){ .r = ((float)r / 255.0) * (pow(2, 5) - 1), 
-                       .g = ((float)g / 255.0) * (pow(2, 6) - 1), 
-                       .b = ((float)b / 255.0) * (pow(2, 5) - 1)};
+  return (color565_t){ .r = ((float)r / (float)UINT8_MAX) * UINT5_MAX, 
+                       .g = ((float)g / (float)UINT8_MAX) * UINT6_MAX, 
+                       .b = ((float)b / (float)UINT8_MAX) * UINT5_MAX};
+}
+
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Draws a filled rectangle on the display at a specified position, with
+//  given dimensions and color.
+//
+// INPUT PARAMETERS: 
+//  x: The x-coordinate of the top-left corner of the rectangle.
+//  y: The y-coordinate of the top-left corner of the rectangle.
+//  width: The width of the rectangle in pixels.
+//  height: The height of the rectangle in pixels.
+//  color: The fill color of the rectangle, represented as a 16-bit RGB565 value.
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+// 
+//-----------------------------------------------------------------------------
+void draw_rectangle(uint8_t x, uint8_t y, uint8_t width, uint8_t height, color565_t color)
+{
+  ST7735S_set_addr(x, y, x + width, y + height);
+  ST7735S_write_command(LCD_RAMWR_CMD);
+  for(uint16_t i = 0; i < (width * height); i++)
+  {
+    ST7735S_write_color(color);
+  }
 }

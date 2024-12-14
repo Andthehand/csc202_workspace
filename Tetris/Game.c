@@ -9,12 +9,14 @@
 //
 //-----------------------------------------------------------------------------
 // DESCRIPTION
-//    
+//    This file is used as the main game logic for tetris using some outside
+//    helper function for input pulling and the such.
 //
 // NOTES:
 //    
 //
 // *****************************************************************************
+//******************************************************************************
 //******************************************************************************
 
 
@@ -31,8 +33,8 @@
 //-----------------------------------------------------------------------------
 #include <ti/devices/msp/msp.h>
 #include "Events.h"
-#include "gfx.h"
 #include "Joystick.h"
+#include "ST7735S.h"
 
 #include "clock.h"
 
@@ -47,6 +49,10 @@
 #define TETRIS_FILL_DELAY                                                    50
 #define TETRIS_LOOP_DELAY                                                    16
 
+#define TETRIS_PADDING                                                        1
+#define TETRIS_X_OFFSET                                                      34
+#define TETRIS_Y_OFFSET                                                       4
+
 
 #define JOYSTICK_RIGHT_DEADBAND                                            3000
 #define JOYSTICK_LEFT_DEADBAND                                             1000
@@ -55,15 +61,13 @@
 // Define a structure to hold different data types used by the program
 //-----------------------------------------------------------------------------
 typedef struct {
-  uint8_t x;
-  uint8_t y;
+  int8_t x;
+  int8_t y;
 } Vector2;
 
 typedef enum {
   BLANK = 0,
   RED = 1,
-  CYAN = 2,
-  ALSO_CYAN = 3
 } BLOCK_COLOR_INDEX;
 
 typedef struct {
@@ -102,12 +106,12 @@ CheckType dirty_grid[TETRIS_WIDTH][TETRIS_HEIGHT];
 
 const Shape SHAPES[] = {
   {{ {1, 1, 1, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0} }, RED, 4}, // I
-  {{ {1, 1}, {1, 1} }, CYAN, 2},                                        // O
-  {{ {0, 1, 1}, {1, 1, 0}, {0, 0, 0} }, BLANK, 3},                      // S
-  {{ {1, 1, 0}, {0, 1, 1}, {0, 0, 0} }, BLANK, 3},                      // Z
-  {{ {1, 0, 0}, {1, 1, 1}, {0, 0, 0} }, BLANK, 3},                      // L
-  {{ {0, 0, 1}, {1, 1, 1}, {0, 0, 0} }, ALSO_CYAN, 3},                  // J
-  {{ {0, 1, 0}, {1, 1, 1}, {0, 0, 0} }, BLANK, 3}                       // T
+  {{ {1, 1}, {1, 1} }, RED, 2},                                         // O
+  {{ {0, 1, 1}, {1, 1, 0}, {0, 0, 0} }, RED, 3},                        // S
+  {{ {1, 1, 0}, {0, 1, 1}, {0, 0, 0} }, RED, 3},                        // Z
+  {{ {1, 0, 0}, {1, 1, 1}, {0, 0, 0} }, RED, 3},                        // L
+  {{ {0, 0, 1}, {1, 1, 1}, {0, 0, 0} }, RED, 3},                        // J
+  {{ {0, 1, 0}, {1, 1, 1}, {0, 0, 0} }, RED, 3}                         // T
 };
 
 Vector2 selected_block_pos = {0};
@@ -133,8 +137,7 @@ void game_init(void)
 {
   memset(dirty_grid, UPDATE_GRID, sizeof(dirty_grid));
 
-  current_block = SHAPES[1];
-  // current_block = SHAPES[rand() % (sizeof(SHAPES) / sizeof(SHAPES[0]))];
+  current_block = SHAPES[rand() % (sizeof(SHAPES) / sizeof(SHAPES[0]))];
   selected_block_pos.x = (TETRIS_WIDTH - current_block.size) / 2;
   selected_block_pos.y = 0;
 
@@ -166,8 +169,9 @@ void game_loop(void)
     loop_count++;
     if((loop_count % TETRIS_LOOPS_TILL_FALL) == 0)
     {
+      loop_count = 0;
+      
       bool moved = move(0, 1);
-
       if(!moved)
       {
         place_shape();
@@ -226,15 +230,20 @@ void input_handler() {
     joystick_last_frame_moved = false;
   }
   
-  if (has_pb2_pressed()) {
-    Shape rotated_shape = rotate_shape();
+  if (has_s2_pressed()) {
+    Shape original_shape = current_block;
+    current_block = rotate_shape();
 
-    update_dirty_grid_rotate(&current_block, &rotated_shape);
-
-    current_block = rotated_shape;
+    if (can_move(0, 0)) {
+      update_dirty_grid_rotate(&original_shape, &current_block);
+    }
+    else 
+    {
+      current_block = original_shape;
+    }
   }
 
-  if (is_pb1_down() && can_move(0, 1)) {
+  if (is_s1_down() && can_move(0, 1)) {
     Vector2 previous_pos = selected_block_pos;
     selected_block_pos.y++;
 
@@ -260,14 +269,14 @@ void input_handler() {
 //-----------------------------------------------------------------------------
 void clear_rows() {
   for (int y = 0; y < TETRIS_HEIGHT; y++) {
-    bool full = true;
+    bool full_row = true;
     for (int x = 0; x < TETRIS_WIDTH; x++) {
       if (!block_grid[x][y]) {
-        full = false;
+        full_row = false;
       }
     }
     
-    if (full) {
+    if (full_row) {
       update_dirty_grid_full_block_grid();
 
       for (int ny = y; ny > 0; ny--) {
@@ -306,14 +315,7 @@ Shape rotate_shape() {
     }
   }
 
-  if(can_move(0, 0))
-  {
-    return rotated;
-  }
-  else 
-  {
-    return current_block;
-  }
+  return rotated;
 }
 
 //-----------------------------------------------------------------------------
@@ -447,7 +449,7 @@ void update_dirty_grid_move(Vector2 previous_pos, Vector2 current_pos)
   {
     for(uint8_t x = 0; x < current_block.size; x++)
     {
-      if(current_block.blocks[x][y] != 0)
+      if(current_block.blocks[x][y] != TETRIS_NO_BLOCK)
       {
         dirty_grid[x + previous_pos.x][y + previous_pos.y] = UPDATE_GRID;
       }
@@ -458,7 +460,7 @@ void update_dirty_grid_move(Vector2 previous_pos, Vector2 current_pos)
   {
     for(uint8_t x = 0; x < current_block.size; x++)
     {
-      if(current_block.blocks[x][y] != 0)
+      if(current_block.blocks[x][y] != TETRIS_NO_BLOCK)
       {
         dirty_grid[x + current_pos.x][y + current_pos.y] = UPDATE_SELECTED_BLOCK;
       }
@@ -553,7 +555,6 @@ void update_dirty_grid_full_block_grid()
 //  none
 // 
 //-----------------------------------------------------------------------------
-
 void render_game_over() 
 {
   memset(block_grid, 1, sizeof(block_grid));
@@ -587,8 +588,6 @@ void render_screen()
   const color565_t BLOCK_COLOR[] = {
     RGB_to_color(0xFF, 0xFF, 0xFF),
     RGB_to_color(0xFF, 0x00, 0x00),
-    RGB_to_color(255, 192, 203),
-    RGB_to_color(255, 20, 0)
   };
 
   for (uint8_t y = 0; y < TETRIS_HEIGHT; y++) 
@@ -597,14 +596,14 @@ void render_screen()
     {
       switch (dirty_grid[x][y]) {
         case UPDATE_GRID:
-          draw_rectangle((x * (TETRIS_BLOCK_SIZE + 1)) + 34, 
-                (y * (TETRIS_BLOCK_SIZE + 1)) + 4, 
+          draw_rectangle((x * (TETRIS_BLOCK_SIZE + TETRIS_PADDING)) + TETRIS_X_OFFSET, 
+                (y * (TETRIS_BLOCK_SIZE + TETRIS_PADDING)) + TETRIS_Y_OFFSET, 
                 TETRIS_BLOCK_SIZE, TETRIS_BLOCK_SIZE, 
                 BLOCK_COLOR[block_grid[x][y]]);
           break;
         case UPDATE_SELECTED_BLOCK:
-            draw_rectangle((x * (TETRIS_BLOCK_SIZE + 1)) + 34, 
-                (y * (TETRIS_BLOCK_SIZE + 1)) + 4, 
+            draw_rectangle((x * (TETRIS_BLOCK_SIZE + TETRIS_PADDING)) + TETRIS_X_OFFSET, 
+                (y * (TETRIS_BLOCK_SIZE + TETRIS_PADDING)) + TETRIS_Y_OFFSET, 
                 TETRIS_BLOCK_SIZE, TETRIS_BLOCK_SIZE, 
                BLOCK_COLOR[current_block.color]);
           break;

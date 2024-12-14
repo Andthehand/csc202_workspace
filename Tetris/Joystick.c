@@ -1,56 +1,21 @@
 // *****************************************************************************
 // ***************************    C Source Code     ****************************
 // *****************************************************************************
-//   DESIGNER NAME:  Bruce Link
+//   DESIGNER NAME:  Andrew DeFord
 //
-//         VERSION:  0.2
+//         VERSION:  0.1
 //
-//       FILE NAME:  adc.c
+//       FILE NAME:  Joystick.c
 //
 //-----------------------------------------------------------------------------
 // DESCRIPTION
-//    This file contains functions for configuring and managing the Analog-to-
-//    Digital Converter (ADC) on the LP-MSPM0G3507 LaunchPad and the CSC202 
-//    Expansion Board. The functions provided in this file facilitate ADC 
-//    setup, sample acquisition, and temperature sensor calculations for 
-//    embedded systems applications.
-//
-//    The header comments for each function describe its purpose, input
-//    parameters, output parameters, and return values.
-//
-//    This code is based on Texas Instruments' LaunchPad project template for
-//    the LP-MSPM0G3507, tailored for use with no RTOS and written in C.
+//    This file is used to initialize 2 ADCs to read both the x and y positions
+//    of the Joystick. Currently in the Game of tetris I do not use the y pos or
+//    the button on the Joystick.
 //
 // NOTES:
-//    - Ensure that `ADC0_init` is called before `ADC0_in` to configure the ADC 
-//      for sampling and conversion tasks. Proper initialization is necessary 
-//      for accurate ADC operations.
+//    
 //
-//    - The `thermistor_calc_temperature` function requires a raw ADC value from 
-//      the TMP61 sensor to compute the temperature. Make sure to configure the 
-//      sensor and ADC correctly for accurate temperature measurements.
-//
-//    - Be aware of the potential for endless loops in `ADC0_init` and `ADC0_in` 
-//      if the hardware status flags do not behave as expected.
-//
-//-----------------------------------------------------------------------------
-// DISCLAIMER
-//    This code was developed for educational purposes as part of the CSC202 
-//    course and is provided "as is" without warranties of any kind, whether 
-//    express, implied, or statutory.
-//
-//    The author and organization do not warrant the accuracy, completeness, or
-//    reliability of the code. The author and organization shall not be liable
-//    for any direct, indirect, incidental, special, exemplary, or consequential
-//    damages arising out of the use of or inability to use the code, even if
-//    advised of the possibility of such damages.
-//
-//    Use of this code is at your own risk, and it is recommended to validate
-//    and adapt the code for your specific application and hardware requirements.
-//
-// Copyright (c) 2024 by TBD
-//    You may use, edit, run or distribute this file as long as the above
-//    copyright notice remains
 // *****************************************************************************
 //******************************************************************************
 
@@ -69,6 +34,20 @@
 #include "clock.h"
 #include "Joystick.h"
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Initializes the joystick by setting up the ADC channels for reading 
+//  joystick values (usually for X and Y axis).
+//
+// INPUT PARAMETERS: 
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  none
+//-----------------------------------------------------------------------------
 void joystick_init(void) 
 {
   ADC0_init();
@@ -136,6 +115,37 @@ void ADC0_init()
   ADC0->ULLMEM.SCOMP0 = 0; // 8 sample clocks
 } /* ADC0_init */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//   This function initializes the ADC1 peripheral for a single channel 
+//   and reference voltage. It configures the ADC clock, control registers, 
+//   and conversion memory to prepare the ADC for single-ended analog-to-digital 
+//   conversions.
+//
+//   The initialization process includes the following steps:
+//   - Resetting the ADC and VREF peripherals (if required)
+//   - Enabling power to the ADC and VREF peripherals
+//   - Configuring the ADC clock source and frequency
+//   - Setting the ADC control registers for single-ended conversions
+//   - Configuring the conversion memory control register for the specified 
+//     channel
+//   - Setting the sample time for the ADC conversions
+//
+//   Note: This function does not start any conversions. It only sets up the ADC
+//   for future use based on the specified parameters.
+//
+// INPUT PARAMETERS:
+//   reference - The reference voltage for the ADC. This can be set to a 
+//               specific reference source (e.g., internal reference or 
+//               external VDD) based on the desired measurement accuracy 
+//               and configuration.
+//
+// OUTPUT PARAMETERS:
+//   none
+//
+// RETURN:
+//   none
+// -----------------------------------------------------------------------------
 void ADC1_init()
 {
   // Reset ADC and VREF
@@ -229,6 +239,35 @@ uint32_t ADC0_in(uint8_t channel)
 
 } /* ADC0_in */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//   This function starts an ADC conversion on the ADC1 peripheral and waits 
+//   for the conversion to complete. It then reads the conversion result from 
+//   the ADC result register and returns it.
+//
+//   The function performs the following steps:
+//   - Starts the ADC conversion by setting the ENC bit in the CTL0 register.
+//   - Triggers the conversion process by setting the SC bit in the CTL1 register.
+//   - Waits for the conversion to complete by checking the BUSY bit in the 
+//     STATUS register.
+//   - Reads the result of the conversion from the MEMRES[0] register and 
+//     returns it.
+//
+//   This function assumes that the ADC has been properly initialized using
+//   the `ADC0_init` function before calling this function.
+//
+// INPUT PARAMETERS:
+//   channel  - The ADC input channel to be used for the conversion. This
+//               parameter specifies which input pin the ADC will sample from.
+//
+//
+// OUTPUT PARAMETERS:
+//   none
+//
+// RETURN:
+//   uint32_t - The result of the ADC conversion. This value represents the 
+//              digital output corresponding to the analog input signal.
+// -----------------------------------------------------------------------------
 uint32_t ADC1_in(uint8_t channel)
 {
   // Configure ADC Control Register 1
@@ -262,6 +301,20 @@ uint32_t ADC1_in(uint8_t channel)
 
 } /* ADC0_in */
 
+//-----------------------------------------------------------------------------
+// DESCRIPTION:
+//  Reads the current position of the joystick by retrieving the X and Y 
+//  axis values from the ADC channels.
+//
+// INPUT PARAMETERS: 
+//  none
+//
+// OUTPUT PARAMETERS:
+//  none
+//
+// RETURN:
+//  A Joystick_pos structure containing the X and Y axis positions of the joystick
+//-----------------------------------------------------------------------------
 Joystick_pos read_joystick() 
 {
   Joystick_pos pos;

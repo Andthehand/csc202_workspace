@@ -9,8 +9,9 @@
 //
 //-----------------------------------------------------------------------------
 // DESCRIPTION
-//    
-//
+//    This file is used for both input pulling and setting up interupts for both
+//    Switch 1 and Switch 2 which despite what they sound like are both buttons.
+//  
 // NOTES:
 //    
 //
@@ -42,7 +43,7 @@
 // ----------------------------------------------------------------------------
 void init_events(void);
 
-bool is_pb1_down();
-bool has_pb2_pressed();
+bool is_s1_down();
+bool has_s2_pressed();
 
 #endif /* __ADC_H__ */

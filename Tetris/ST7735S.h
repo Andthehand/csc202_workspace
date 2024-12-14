@@ -108,6 +108,17 @@
 #define LCD_WIDTH                                                            128
 #define LCD_HEIGHT                                                           128
 
+#define LCD_XS_OFFSET                                                       0x02
+#define LCD_XE_OFFSET                                                       0x01
+#define LCD_YS_OFFSET                                                       0x03
+#define LCD_YE_OFFSET                                                       0x02
+
+#define UINT5_MAX                                                             31
+#define UINT6_MAX                                                             63
+
+#define STARTUP_DELAY                                                        200
+#define STARTUP_LAST_DELAY                                                   500
+
 typedef struct{
   union {
     struct {

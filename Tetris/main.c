@@ -3,14 +3,14 @@
 //*****************************************************************************
 //  DESIGNER NAME:  Andrew DeFord
 //
-//       LAB NAME:  TBD
+//       LAB NAME:  Final Project
 //
 //      FILE NAME:  main.c
 //
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION:
-//    This program serves as a ... 
+//    This program serves as a tetris clone using the ti MKII expansion board.
 //
 //*****************************************************************************
 //*****************************************************************************
@@ -28,7 +28,6 @@
 #include "ST7735S.h"
 #include "Joystick.h"
 #include "Events.h"
-#include "gfx.h"
 #include "Buzzer.h"
 #include "Game.h"
 
@@ -57,7 +56,7 @@ int main(void){
 
   ST7735S_init();
   joystick_init();
-  // buzzer_init();
+  buzzer_init();
 
   init_events();
 
