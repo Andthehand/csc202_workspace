@@ -9,7 +9,9 @@
 //
 //-----------------------------------------------------------------------------
 // DESCRIPTION
-//    
+//    This file designed for interfacing with the ST7735S LCD display using SPI 
+//    communication. It defines SPI settings, and commands necessary for 
+//    initializing and controlling the LCD.
 //
 //-----------------------------------------------------------------------------
 // DISCLAIMER

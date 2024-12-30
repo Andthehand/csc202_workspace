@@ -12,6 +12,8 @@
 //    This file is used as the main game logic for tetris using some outside
 //    helper function for input pulling and the such.
 //
+//    Reference: https://stackoverflow.com/questions/233850/tetris-piece-rotation-algorithm
+//
 // NOTES:
 //    
 //
